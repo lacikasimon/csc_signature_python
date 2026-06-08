@@ -25,6 +25,8 @@ services:
       - "5345"
     expose:
       - "5345"
+    ports:
+      - "${APP_BIND_IP:-0.0.0.0}:${APP_HOST_PORT:-5345}:5345"
     healthcheck:
       test:
         - CMD

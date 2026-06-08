@@ -187,6 +187,10 @@ environment variables in Coolify:
 
 - `APP_PASSWORD`: password for the browser/API Basic Auth prompt.
 - `APP_USERNAME`: optional, defaults to `admin`.
+- `APP_BIND_IP`: optional host bind address for direct LAN access, defaults to
+  `0.0.0.0`.
+- `APP_HOST_PORT`: optional host port for direct LAN access, defaults to
+  `5345`.
 - `CSC_SERVICE_URL`: production CSC provider URL.
 - `CSC_CREDENTIAL_ID`: production signing credential.
 - `CSC_OAUTH_TOKEN` or request-scoped `X-CSC-OAuth-Token` handling, depending
@@ -195,8 +199,9 @@ environment variables in Coolify:
   uses a different credential/token.
 
 The production compose file exposes container port `5345` to Coolify's reverse
-proxy and uses `/healthz` for health checks. Do not deploy `csc-dummy` in
-production.
+proxy and also publishes host port `5345` by default for direct LAN access such
+as `http://192.168.1.200:5345/`. It uses `/healthz` for health checks. Do not
+deploy `csc-dummy` in production.
 
 The upstream `certomancer-csc` CLI binds to `localhost`, so this repo uses a
 tiny wrapper that runs the same CSC app on `0.0.0.0` for container networking.
