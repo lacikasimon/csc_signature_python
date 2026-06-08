@@ -1,0 +1,60 @@
+services:
+  csc-dummy:
+    build:
+      context: ./services/csc-dummy
+    ports:
+      - "9000:9000"
+    healthcheck:
+      test:
+        - CMD
+        - python
+        - -c
+        - "import urllib.request; urllib.request.urlopen('http://localhost:9000/info', timeout=5).read()"
+      interval: 5s
+      timeout: 5s
+      retries: 20
+
+  signing-api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    environment:
+      CSC_SERVICE_URL: http://csc-dummy:9000
+      CSC_API_VERSION: v1
+      CSC_CREDENTIAL_ID: testing-ca/signer1-long
+      CSC_OAUTH_TOKEN: deadbeef
+      SIGNING_TIMEOUT_SECONDS: "300"
+      MAX_PDF_MB: "25"
+      PDF_DIGEST_ALGORITHM: sha256
+    ports:
+      - "8000:8000"
+    depends_on:
+      csc-dummy:
+        condition: service_healthy
+    healthcheck:
+      test:
+        - CMD
+        - python
+        - -c
+        - "import urllib.request; urllib.request.urlopen('http://localhost:8000/readyz', timeout=10).read()"
+      interval: 5s
+      timeout: 10s
+      retries: 20
+
+  demo-client:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    profiles:
+      - demo
+    environment:
+      SIGNING_API_URL: http://signing-api:8000
+      SIGNED_OUTPUT_PATH: /artifacts/signed-demo.pdf
+      DEMO_INPUT_PDF: /samples/input.pdf
+    command: ["python", "-m", "csc_signing_service.demo_client"]
+    volumes:
+      - ./artifacts:/artifacts
+      - ./samples:/samples:ro
+    depends_on:
+      signing-api:
+        condition: service_healthy

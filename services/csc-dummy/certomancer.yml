@@ -1,0 +1,73 @@
+external-url-prefix: "http://csc-dummy:9000"
+
+keysets:
+  testing-ca:
+    path-prefix: keys-rsa
+    keys:
+      root:
+        path: root_ca.key.pem
+        password: secret
+      interm:
+        path: intermediate_ca.key.pem
+        password: secret
+      signer1:
+        path: signer.key.pem
+        password: secret
+
+pki-architectures:
+  testing-ca:
+    keyset: testing-ca
+    entity-defaults:
+      country-name: HU
+      organization-name: CSC Demo
+      organizational-unit-name: Test Authority
+    entities:
+      root:
+        common-name: CSC Demo Root CA
+      interm:
+        common-name: CSC Demo Intermediate CA
+      signer1:
+        common-name: Demo Signer
+        email-address: signer@example.test
+    certs:
+      root:
+        subject: root
+        subject-key: root
+        issuer: root
+        authority-key: root
+        validity:
+          valid-from: "2020-01-01T00:00:00+0000"
+          valid-to: "2040-01-01T00:00:00+0000"
+        profiles:
+          - id: simple-ca
+            params:
+              crl-repo: root
+      interm:
+        issuer: root
+        validity:
+          valid-from: "2020-01-01T00:00:00+0000"
+          valid-to: "2035-01-01T00:00:00+0000"
+        profiles:
+          - id: simple-ca
+            params:
+              max-path-len: 0
+              crl-repo: interm
+      signer1-long:
+        subject: signer1
+        subject-key: signer1
+        issuer: interm
+        validity:
+          valid-from: "2020-01-01T00:00:00+0000"
+          valid-to: "2030-01-01T00:00:00+0000"
+        profiles:
+          - digsig-commitment
+    services:
+      crl-repo:
+        root:
+          for-issuer: root
+          signing-key: root
+          simulated-update-schedule: "P90D"
+        interm:
+          for-issuer: interm
+          signing-key: interm
+          simulated-update-schedule: "P30D"

@@ -1,0 +1,35 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "csc-signature-python"
+version = "0.1.0"
+description = "FastAPI + pyHanko CSC PDF signing demo service"
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+    "aiohttp>=3.10,<4",
+    "fastapi>=0.115,<1",
+    "httpx>=0.27,<1",
+    "pydantic>=2.8,<3",
+    "pydantic-settings>=2.4,<3",
+    "pyHanko>=0.35,<0.36",
+    "PyMuPDF>=1.24,<2",
+    "python-multipart>=0.0.12,<1",
+    "reportlab>=4.2,<5",
+    "uvicorn[standard]>=0.32,<1",
+]
+
+[project.optional-dependencies]
+test = [
+    "pytest>=8,<9",
+    "pytest-asyncio>=0.24,<1",
+]
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+testpaths = ["tests"]
