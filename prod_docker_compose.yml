@@ -16,14 +16,21 @@ services:
       SIGNING_TIMEOUT_SECONDS: ${SIGNING_TIMEOUT_SECONDS:-300}
       MAX_PDF_MB: ${MAX_PDF_MB:-25}
       PDF_DIGEST_ALGORITHM: ${PDF_DIGEST_ALGORITHM:-sha256}
+    command:
+      - uvicorn
+      - csc_signing_service.main:app
+      - --host
+      - 0.0.0.0
+      - --port
+      - "5345"
     expose:
-      - "8000"
+      - "5345"
     healthcheck:
       test:
         - CMD
         - python
         - -c
-        - "import urllib.request; urllib.request.urlopen('http://localhost:8000/healthz', timeout=10).read()"
+        - "import urllib.request; urllib.request.urlopen('http://localhost:5345/healthz', timeout=10).read()"
       interval: 30s
       timeout: 10s
       retries: 5

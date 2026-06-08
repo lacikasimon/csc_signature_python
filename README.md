@@ -194,7 +194,7 @@ environment variables in Coolify:
 - `CSC_SEAL_CREDENTIAL_ID` and `CSC_SEAL_OAUTH_TOKEN` if the electronic seal
   uses a different credential/token.
 
-The production compose file exposes container port `8000` to Coolify's reverse
+The production compose file exposes container port `5345` to Coolify's reverse
 proxy and uses `/healthz` for health checks. Do not deploy `csc-dummy` in
 production.
 
