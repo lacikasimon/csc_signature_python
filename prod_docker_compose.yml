@@ -1,0 +1,30 @@
+services:
+  signing-api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    environment:
+      APP_USERNAME: ${APP_USERNAME:-admin}
+      APP_PASSWORD: ${APP_PASSWORD:?Set APP_PASSWORD in Coolify environment variables}
+      CSC_SERVICE_URL: ${CSC_SERVICE_URL:?Set CSC_SERVICE_URL to your production CSC provider}
+      CSC_API_VERSION: ${CSC_API_VERSION:-v1}
+      CSC_CREDENTIAL_ID: ${CSC_CREDENTIAL_ID:?Set CSC_CREDENTIAL_ID}
+      CSC_SEAL_CREDENTIAL_ID: ${CSC_SEAL_CREDENTIAL_ID:-}
+      CSC_OAUTH_TOKEN: ${CSC_OAUTH_TOKEN:-}
+      CSC_SEAL_OAUTH_TOKEN: ${CSC_SEAL_OAUTH_TOKEN:-}
+      SIGNING_TIMEOUT_SECONDS: ${SIGNING_TIMEOUT_SECONDS:-300}
+      MAX_PDF_MB: ${MAX_PDF_MB:-25}
+      PDF_DIGEST_ALGORITHM: ${PDF_DIGEST_ALGORITHM:-sha256}
+    expose:
+      - "8000"
+    healthcheck:
+      test:
+        - CMD
+        - python
+        - -c
+        - "import urllib.request; urllib.request.urlopen('http://localhost:8000/healthz', timeout=10).read()"
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 20s

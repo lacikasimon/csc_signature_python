@@ -161,6 +161,9 @@ The signing service is configured with environment variables:
 - `CSC_OAUTH_TOKEN`, optional fallback token
 - `CSC_SEAL_OAUTH_TOKEN`, optional token for the electronic seal credential.
   Defaults to `CSC_OAUTH_TOKEN` when omitted.
+- `APP_USERNAME`, default `admin`
+- `APP_PASSWORD`, optional. When set, the web UI and API require HTTP Basic
+  authentication. `GET /healthz` remains public for container health checks.
 - `SIGNING_TIMEOUT_SECONDS`, default `300`
 - `MAX_PDF_MB`, default `25`
 - `PDF_DIGEST_ALGORITHM`, default `sha256`
@@ -178,6 +181,22 @@ For production, deploy only `signing-api` and point `CSC_SERVICE_URL`,
 `CSC_CREDENTIAL_ID`, `CSC_SEAL_CREDENTIAL_ID`, and OAuth handling at the real
 CSC provider. The `csc-dummy` image intentionally omits production security
 controls and binds a generated test keypair into a local CSC API.
+
+For Coolify, use `prod_docker_compose.yml`. Configure at least these
+environment variables in Coolify:
+
+- `APP_PASSWORD`: password for the browser/API Basic Auth prompt.
+- `APP_USERNAME`: optional, defaults to `admin`.
+- `CSC_SERVICE_URL`: production CSC provider URL.
+- `CSC_CREDENTIAL_ID`: production signing credential.
+- `CSC_OAUTH_TOKEN` or request-scoped `X-CSC-OAuth-Token` handling, depending
+  on the production CSC integration.
+- `CSC_SEAL_CREDENTIAL_ID` and `CSC_SEAL_OAUTH_TOKEN` if the electronic seal
+  uses a different credential/token.
+
+The production compose file exposes container port `8000` to Coolify's reverse
+proxy and uses `/healthz` for health checks. Do not deploy `csc-dummy` in
+production.
 
 The upstream `certomancer-csc` CLI binds to `localhost`, so this repo uses a
 tiny wrapper that runs the same CSC app on `0.0.0.0` for container networking.

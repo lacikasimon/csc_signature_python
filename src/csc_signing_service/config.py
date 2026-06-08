@@ -6,6 +6,8 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
 class Settings(BaseSettings):
+    app_username: str = "admin"
+    app_password: Optional[str] = None
     csc_service_url: str = "http://csc-dummy:9000"
     csc_api_version: str = "v1"
     csc_credential_id: str = "testing-ca/signer1-long"

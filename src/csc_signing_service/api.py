@@ -1,3 +1,6 @@
+import base64
+import binascii
+import secrets
 from contextlib import asynccontextmanager
 from typing import Optional
 
@@ -18,6 +21,8 @@ from .pdf_preview import render_pdf_page
 from .signing import PDFSigningService
 from .web import DEMO_HTML
 
+AUTH_EXEMPT_PATHS = {"/healthz"}
+
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -34,6 +39,19 @@ def create_app() -> FastAPI:
         version="0.1.0",
         lifespan=lifespan,
     )
+
+    @app.middleware("http")
+    async def require_app_password(request: Request, call_next):
+        settings = getattr(request.app.state, "settings", None) or get_settings()
+        if not settings.app_password or request.url.path in AUTH_EXEMPT_PATHS:
+            return await call_next(request)
+        if _basic_auth_matches(
+            request.headers.get("Authorization"),
+            username=settings.app_username,
+            password=settings.app_password,
+        ):
+            return await call_next(request)
+        return _auth_challenge()
 
     @app.get("/", include_in_schema=False)
     async def demo_ui():
@@ -245,6 +263,39 @@ def _settings(request: Request) -> Settings:
 
 def _service(request: Request) -> PDFSigningService:
     return request.app.state.signing_service
+
+
+def _basic_auth_matches(
+    authorization: Optional[str],
+    *,
+    username: str,
+    password: str,
+) -> bool:
+    if not authorization:
+        return False
+    scheme, _, credentials = authorization.partition(" ")
+    if scheme.lower() != "basic" or not credentials:
+        return False
+    try:
+        decoded = base64.b64decode(credentials, validate=True).decode("utf-8")
+    except (binascii.Error, UnicodeDecodeError, ValueError):
+        return False
+    supplied_username, separator, supplied_password = decoded.partition(":")
+    if not separator:
+        return False
+    return secrets.compare_digest(
+        supplied_username,
+        username,
+    ) and secrets.compare_digest(supplied_password, password)
+
+
+def _auth_challenge() -> Response:
+    return Response(
+        content="Authentication required",
+        media_type="text/plain",
+        status_code=401,
+        headers={"WWW-Authenticate": 'Basic realm="CSC PDF Signer"'},
+    )
 
 
 async def _read_upload(upload: UploadFile, max_bytes: int) -> bytes:

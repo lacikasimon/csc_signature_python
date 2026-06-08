@@ -8,6 +8,8 @@ def test_settings_defaults():
     assert settings.csc_api_version == "v1"
     assert settings.csc_credential_id == "testing-ca/signer1-long"
     assert settings.seal_credential_id == "testing-ca/signer1-long"
+    assert settings.app_username == "admin"
+    assert settings.app_password is None
     assert settings.max_pdf_bytes == 25 * 1024 * 1024
 
 
