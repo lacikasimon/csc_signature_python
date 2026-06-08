@@ -34,6 +34,9 @@ The demo UI is served at `/`.
   - `pdf`: PDF file.
   - `page`: zero-based page index.
 - `POST /v1/stamp/pdf` adds a text stamp and returns `application/pdf`.
+- `POST /v1/signature-placeholders/pdf` adds one or more empty visible PDF
+  signature fields for multi-signature workflows and returns
+  `application/pdf`.
 - `POST /v1/sign/pdf` accepts `multipart/form-data`:
   - `pdf`: PDF file.
   - `metadata`: optional JSON. It can include an optional `stamp` block to
@@ -87,6 +90,43 @@ Standalone stamp metadata:
 }
 ```
 
+Multi-signature placeholder metadata:
+
+```json
+{
+  "empty_field_appearance": true,
+  "sign_first": true,
+  "sign_reason": "Semnare prima poziție",
+  "sign_location": "București, România",
+  "placeholders": [
+    {
+      "field_name": "Semnatar1",
+      "box": {
+        "page": 0,
+        "x1": 72,
+        "y1": 72,
+        "x2": 190,
+        "y2": 120
+      }
+    },
+    {
+      "field_name": "Semnatar2",
+      "box": {
+        "page": 0,
+        "x1": 220,
+        "y1": 72,
+        "x2": 340,
+        "y2": 120
+      }
+    }
+  ]
+}
+```
+
+When `sign_first` is `true`, the service creates all placeholder fields first
+and then signs the first field in the `placeholders` array using the configured
+CSC signer. Use `X-CSC-OAuth-Token` to pass a request-scoped CSC token.
+
 Electronic seal metadata:
 
 ```json
@@ -104,9 +144,10 @@ Electronic seal metadata:
 }
 ```
 
-The web UI lets users place the stamp, visible signature, and electronic seal
-visually on a rendered PDF page. UI coordinates are edited in millimeters and
-converted to PDF points before calling the API.
+The web UI lets users place the stamp, visible signature, multi-signature
+placeholders, and electronic seal visually on a rendered PDF page. UI
+coordinates are edited in millimeters and converted to PDF points before
+calling the API.
 
 ## Configuration
 

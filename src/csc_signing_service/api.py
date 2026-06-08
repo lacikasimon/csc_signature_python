@@ -8,7 +8,12 @@ from pydantic import ValidationError
 
 from .config import Settings, get_settings
 from .errors import CSCProviderError, CSCProviderTimeoutError, InvalidPDFError
-from .models import ElectronicSealMetadata, SigningMetadata, StampMetadata
+from .models import (
+    ElectronicSealMetadata,
+    SignaturePlaceholdersMetadata,
+    SigningMetadata,
+    StampMetadata,
+)
 from .pdf_preview import render_pdf_page
 from .signing import PDFSigningService
 from .web import DEMO_HTML
@@ -163,6 +168,49 @@ def create_app() -> FastAPI:
             },
         )
 
+    @app.post("/v1/signature-placeholders/pdf")
+    async def signature_placeholders_pdf(
+        request: Request,
+        pdf: UploadFile = File(...),
+        metadata: Optional[str] = Form(default=None),
+        x_csc_oauth_token: Optional[str] = Header(default=None),
+    ):
+        settings = _settings(request)
+        pdf_bytes = await _read_upload(pdf, max_bytes=settings.max_pdf_bytes)
+        placeholders_metadata = _parse_signature_placeholders_metadata(metadata)
+        service = _service(request)
+
+        try:
+            placeholders_pdf = service.add_signature_placeholders(
+                pdf_bytes,
+                placeholders_metadata,
+            )
+            if placeholders_metadata.sign_first:
+                first_placeholder = placeholders_metadata.placeholders[0]
+                placeholders_pdf = await service.sign_existing_field_pdf(
+                    placeholders_pdf,
+                    SigningMetadata(
+                        field_name=first_placeholder.field_name,
+                        reason=placeholders_metadata.sign_reason,
+                        location=placeholders_metadata.sign_location,
+                    ),
+                    oauth_token=x_csc_oauth_token,
+                )
+        except InvalidPDFError as exc:
+            raise HTTPException(status_code=422, detail=str(exc)) from exc
+        except CSCProviderTimeoutError as exc:
+            raise HTTPException(status_code=504, detail=str(exc)) from exc
+        except CSCProviderError as exc:
+            raise HTTPException(status_code=502, detail=str(exc)) from exc
+
+        return Response(
+            content=placeholders_pdf,
+            media_type="application/pdf",
+            headers={
+                "Content-Disposition": 'attachment; filename="signature-placeholders.pdf"'
+            },
+        )
+
     @app.post("/v1/pdf/page-image")
     async def pdf_page_image(
         request: Request,
@@ -222,6 +270,12 @@ def _parse_seal_metadata(raw_metadata: Optional[str]) -> ElectronicSealMetadata:
 
 def _parse_stamp_metadata(raw_metadata: Optional[str]) -> StampMetadata:
     return _parse_json_metadata(raw_metadata, StampMetadata)
+
+
+def _parse_signature_placeholders_metadata(
+    raw_metadata: Optional[str],
+) -> SignaturePlaceholdersMetadata:
+    return _parse_json_metadata(raw_metadata, SignaturePlaceholdersMetadata)
 
 
 def _parse_json_metadata(raw_metadata: Optional[str], model_cls):

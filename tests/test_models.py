@@ -4,6 +4,8 @@ from pydantic import ValidationError
 from csc_signing_service.models import (
     ElectronicSealMetadata,
     SignatureBox,
+    SignaturePlaceholder,
+    SignaturePlaceholdersMetadata,
     SigningMetadata,
     StampMetadata,
 )
@@ -44,6 +46,39 @@ def test_electronic_seal_metadata_defaults():
 def test_electronic_seal_field_name_uses_signature_rules():
     with pytest.raises(ValidationError):
         ElectronicSealMetadata(field_name="Seal.1")
+
+
+def test_signature_placeholders_metadata_defaults_and_uniqueness():
+    metadata = SignaturePlaceholdersMetadata()
+
+    assert len(metadata.placeholders) == 1
+    assert metadata.placeholders[0].field_name == "Signature1"
+    assert metadata.placeholders[0].box.as_tuple() == (72, 72, 260, 140)
+    assert metadata.sign_first is False
+    assert metadata.sign_reason == "Semnare prima poziție"
+    assert metadata.sign_location == "București, România"
+
+    with pytest.raises(ValidationError):
+        SignaturePlaceholdersMetadata(
+            placeholders=[
+                SignaturePlaceholder(
+                    field_name="Signature1",
+                    box=SignatureBox(page=0, x1=10, y1=10, x2=40, y2=30),
+                ),
+                SignaturePlaceholder(
+                    field_name="Signature1",
+                    box=SignatureBox(page=0, x1=50, y1=10, x2=80, y2=30),
+                ),
+            ]
+        )
+
+
+def test_signature_placeholder_field_name_uses_signature_rules():
+    with pytest.raises(ValidationError):
+        SignaturePlaceholder(
+            field_name="Sig.1",
+            box=SignatureBox(page=0, x1=10, y1=10, x2=40, y2=30),
+        )
 
 
 def test_stamp_metadata_defaults():

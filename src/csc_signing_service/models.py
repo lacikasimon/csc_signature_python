@@ -1,4 +1,4 @@
-from typing import Optional, Tuple
+from typing import List, Optional, Tuple
 
 from pydantic import BaseModel, Field, field_validator, model_validator
 
@@ -91,3 +91,46 @@ class ElectronicSealMetadata(SigningMetadata):
     field_name: str = Field(default="SigiliuElectronic1", min_length=1)
     reason: Optional[str] = "Sigiliu electronic instituțional"
     location: Optional[str] = "București, România"
+
+
+class SignaturePlaceholder(BaseModel):
+    field_name: str = Field(default="Signature1", min_length=1)
+    box: SignatureBox
+
+    @field_validator("field_name")
+    @classmethod
+    def validate_field_name(cls, value: str) -> str:
+        normalized = value.strip()
+        if not normalized:
+            raise ValueError("field_name cannot be empty")
+        if "." in normalized:
+            raise ValueError("field_name cannot contain dots")
+        return normalized
+
+
+def default_signature_placeholders() -> List[SignaturePlaceholder]:
+    return [
+        SignaturePlaceholder(
+            field_name="Signature1",
+            box=SignatureBox(page=0, x1=72, y1=72, x2=260, y2=140),
+        )
+    ]
+
+
+class SignaturePlaceholdersMetadata(BaseModel):
+    placeholders: List[SignaturePlaceholder] = Field(
+        default_factory=default_signature_placeholders,
+        min_length=1,
+        max_length=20,
+    )
+    empty_field_appearance: bool = True
+    sign_first: bool = False
+    sign_reason: Optional[str] = "Semnare prima poziție"
+    sign_location: Optional[str] = "București, România"
+
+    @model_validator(mode="after")
+    def validate_unique_field_names(self) -> "SignaturePlaceholdersMetadata":
+        names = [placeholder.field_name for placeholder in self.placeholders]
+        if len(names) != len(set(names)):
+            raise ValueError("placeholder field names must be unique")
+        return self

@@ -346,24 +346,107 @@ DEMO_HTML = """
       font-weight: 900;
     }
 
-    .mode-grid {
+    .sidebar-layer.hidden {
+      display: none;
+    }
+
+    .detail-nav {
       display: grid;
-      grid-template-columns: repeat(2, minmax(0, 1fr));
+      grid-template-columns: 36px minmax(0, 1fr);
+      align-items: center;
       gap: 10px;
     }
 
-    .mode-button {
-      min-height: 36px;
+    .back-button {
+      width: 34px;
+      height: 34px;
       display: inline-flex;
       align-items: center;
       justify-content: center;
+      border: 1px solid var(--line-strong);
+      border-radius: 5px;
+      color: var(--teal-dark);
+      background: #fff;
+      cursor: pointer;
+      box-shadow: var(--shadow-soft);
+    }
+
+    .detail-title {
+      min-width: 0;
+      display: grid;
+      gap: 2px;
+    }
+
+    .detail-title h2 {
+      margin: 0;
+      overflow: hidden;
+      color: #17324a;
+      font-size: 15px;
+      line-height: 1.15;
+      font-weight: 900;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .detail-title span {
+      overflow: hidden;
+      color: var(--muted);
+      font-size: 11px;
+      font-weight: 800;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .mode-grid {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr);
       gap: 8px;
+    }
+
+    .mode-button {
+      min-height: 50px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: flex-start;
+      gap: 10px;
+      padding: 0 10px;
       border: 1px solid var(--line);
       border-radius: 5px;
       background: #fff;
       color: #526172;
       font-weight: 800;
       cursor: pointer;
+      text-align: left;
+    }
+
+    .mode-button svg {
+      width: 18px;
+      height: 18px;
+    }
+
+    .mode-copy {
+      min-width: 0;
+      display: grid;
+      gap: 2px;
+    }
+
+    .mode-copy strong {
+      overflow: hidden;
+      color: #1e3147;
+      font-size: 12px;
+      line-height: 1.1;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .mode-copy span {
+      overflow: hidden;
+      color: var(--muted);
+      font-size: 11px;
+      line-height: 1.15;
+      font-weight: 700;
+      text-overflow: ellipsis;
+      white-space: nowrap;
     }
 
     .mode-button.active {
@@ -371,6 +454,11 @@ DEMO_HTML = """
       border-color: var(--teal);
       background: linear-gradient(180deg, #0f4c9a, #0a3475);
       box-shadow: 0 8px 18px rgba(11, 59, 130, 0.20);
+    }
+
+    .mode-button.active .mode-copy strong,
+    .mode-button.active .mode-copy span {
+      color: #fff;
     }
 
     .switch {
@@ -418,6 +506,14 @@ DEMO_HTML = """
     }
 
     .section-body.collapsed {
+      display: none;
+    }
+
+    .function-section-hidden {
+      display: none;
+    }
+
+    .function-section .step-header .switch {
       display: none;
     }
 
@@ -588,6 +684,91 @@ DEMO_HTML = """
       cursor: pointer;
     }
 
+    .placeholder-actions {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+      gap: 8px;
+      margin-bottom: 10px;
+    }
+
+    .mini-action {
+      min-height: 32px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 7px;
+      border: 1px solid #cbd7e6;
+      border-radius: 5px;
+      color: var(--teal-dark);
+      background: #fff;
+      font-size: 12px;
+      font-weight: 900;
+      cursor: pointer;
+      box-shadow: var(--shadow-soft);
+    }
+
+    .mini-action.danger {
+      color: var(--danger);
+    }
+
+    .mini-action:disabled {
+      cursor: not-allowed;
+      opacity: 0.48;
+    }
+
+    .placeholder-list {
+      display: grid;
+      gap: 6px;
+      margin-bottom: 10px;
+    }
+
+    .placeholder-item {
+      min-height: 34px;
+      display: grid;
+      grid-template-columns: 24px minmax(0, 1fr) auto;
+      align-items: center;
+      gap: 8px;
+      padding: 7px 8px;
+      border: 1px solid var(--line);
+      border-radius: 5px;
+      color: #415878;
+      background: #fff;
+      cursor: pointer;
+      text-align: left;
+    }
+
+    .placeholder-item.active {
+      border-color: #4f46e5;
+      color: #1e1b4b;
+      background: #eef2ff;
+    }
+
+    .placeholder-index {
+      width: 22px;
+      height: 22px;
+      display: inline-grid;
+      place-items: center;
+      border-radius: 999px;
+      color: #fff;
+      background: #4f46e5;
+      font-size: 11px;
+      font-weight: 900;
+    }
+
+    .placeholder-name {
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      font-size: 12px;
+      font-weight: 900;
+    }
+
+    .placeholder-page {
+      color: var(--muted);
+      font-size: 11px;
+      font-weight: 800;
+    }
+
     .sidebar-actions {
       position: sticky;
       bottom: 0;
@@ -596,6 +777,10 @@ DEMO_HTML = """
       gap: 8px;
       padding: 10px 0 12px;
       background: linear-gradient(rgba(255, 255, 255, 0), #fff 22%);
+    }
+
+    .sidebar-actions.hidden {
+      display: none;
     }
 
     .primary-action,
@@ -827,6 +1012,9 @@ DEMO_HTML = """
       text-align: center;
       cursor: move;
       text-transform: uppercase;
+      touch-action: none;
+      user-select: none;
+      will-change: left, top, width, height;
       box-shadow: 0 4px 12px rgba(11, 59, 130, 0.18);
     }
 
@@ -850,6 +1038,40 @@ DEMO_HTML = """
       gap: 2px;
       padding: 6px 8px;
       text-transform: uppercase;
+    }
+
+    .placeholder-layer {
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+    }
+
+    .placeholder-layer .placement-box {
+      pointer-events: auto;
+    }
+
+    .placement-box.placeholder {
+      border-color: #4f46e5;
+      color: #3730a3;
+      background: rgba(238, 242, 255, 0.9);
+      align-content: center;
+      justify-items: center;
+      gap: 2px;
+      padding: 6px 8px;
+      text-transform: none;
+    }
+
+    .placement-box.placeholder.active {
+      border-color: #1d4ed8;
+      color: #1d4ed8;
+      box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.16), 0 4px 12px rgba(11, 59, 130, 0.18);
+    }
+
+    .placeholder-caption {
+      font-size: 10px;
+      font-weight: 900;
+      color: #1f3150;
+      text-align: center;
     }
 
     .seal-mark {
@@ -1249,49 +1471,90 @@ DEMO_HTML = """
           </div>
         </section>
 
-        <section class="step">
-          <div class="step-header">
-            <h2 class="step-title">2. MOD DE OPERARE</h2>
-          </div>
-          <div class="mode-grid" role="tablist" aria-label="Mod de operare">
-            <button class="mode-button" type="button" data-mode="sign">
-              <svg viewBox="0 0 24 24" aria-hidden="true">
-                <path d="M12 20h9"></path>
-                <path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"></path>
-              </svg>
-              Semnare
-            </button>
-            <button class="mode-button" type="button" data-mode="stamp">
-              <svg viewBox="0 0 24 24" aria-hidden="true">
-                <path d="M7 21h10"></path>
-                <path d="M9 17h6"></path>
-                <path d="M12 3v8"></path>
-                <path d="M8 11h8l1 6H7Z"></path>
-              </svg>
-              Ștampilă
-            </button>
-            <button class="mode-button active" type="button" data-mode="both">
-              <svg viewBox="0 0 24 24" aria-hidden="true">
-                <path d="M12 20h9"></path>
-                <path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"></path>
-                <path d="M4 7h7"></path>
-              </svg>
-              Semnare + Ștampilă
-            </button>
-            <button class="mode-button" type="button" data-mode="seal">
-              <svg viewBox="0 0 24 24" aria-hidden="true">
-                <path d="M12 3 20 6v6c0 5-3.4 8-8 9-4.6-1-8-4-8-9V6l8-3Z"></path>
-                <path d="M9 12h6"></path>
-                <path d="M12 9v6"></path>
-              </svg>
-              Sigiliu electronic
-            </button>
-          </div>
-        </section>
+        <div id="functionMenuLayer" class="sidebar-layer">
+          <section class="step">
+            <div class="step-header">
+              <h2 class="step-title">2. FUNCȚII</h2>
+            </div>
+            <div class="mode-grid" role="tablist" aria-label="Mod de operare">
+              <button class="mode-button" type="button" data-mode="sign" aria-pressed="false">
+                <svg viewBox="0 0 24 24" aria-hidden="true">
+                  <path d="M12 20h9"></path>
+                  <path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"></path>
+                </svg>
+                <span class="mode-copy">
+                  <strong>Semnare</strong>
+                  <span>O singură semnătură CSC</span>
+                </span>
+              </button>
+              <button class="mode-button" type="button" data-mode="stamp" aria-pressed="false">
+                <svg viewBox="0 0 24 24" aria-hidden="true">
+                  <path d="M7 21h10"></path>
+                  <path d="M9 17h6"></path>
+                  <path d="M12 3v8"></path>
+                  <path d="M8 11h8l1 6H7Z"></path>
+                </svg>
+                <span class="mode-copy">
+                  <strong>Ștampilă</strong>
+                  <span>Marcaj vizibil pe document</span>
+                </span>
+              </button>
+              <button class="mode-button active" type="button" data-mode="both" aria-pressed="true">
+                <svg viewBox="0 0 24 24" aria-hidden="true">
+                  <path d="M12 20h9"></path>
+                  <path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"></path>
+                  <path d="M4 7h7"></path>
+                </svg>
+                <span class="mode-copy">
+                  <strong>Semnare + Ștampilă</strong>
+                  <span>Semnare CSC cu ștampilă</span>
+                </span>
+              </button>
+              <button class="mode-button" type="button" data-mode="placeholders" aria-pressed="false">
+                <svg viewBox="0 0 24 24" aria-hidden="true">
+                  <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8Z"></path>
+                  <path d="M14 2v6h6"></path>
+                  <path d="M8 14h8"></path>
+                  <path d="M8 18h5"></path>
+                </svg>
+                <span class="mode-copy">
+                  <strong>Semnături multiple</strong>
+                  <span>Poziții pentru mai mulți semnatari</span>
+                </span>
+              </button>
+              <button class="mode-button" type="button" data-mode="seal" aria-pressed="false">
+                <svg viewBox="0 0 24 24" aria-hidden="true">
+                  <path d="M12 3 20 6v6c0 5-3.4 8-8 9-4.6-1-8-4-8-9V6l8-3Z"></path>
+                  <path d="M9 12h6"></path>
+                  <path d="M12 9v6"></path>
+                </svg>
+                <span class="mode-copy">
+                  <strong>Sigiliu electronic</strong>
+                  <span>Sigiliu instituțional CSC</span>
+                </span>
+              </button>
+            </div>
+          </section>
+        </div>
 
-        <section class="step">
+        <div id="functionDetailLayer" class="sidebar-layer hidden">
+          <section class="step">
+            <div class="detail-nav">
+              <button id="backToFunctionList" class="back-button" type="button" aria-label="Înapoi la lista funcțiilor">
+                <svg viewBox="0 0 24 24" aria-hidden="true">
+                  <path d="m15 18-6-6 6-6"></path>
+                </svg>
+              </button>
+              <div class="detail-title">
+                <h2 id="detailTitle">Funcție</h2>
+                <span id="detailSubtitle">Configurați opțiunile funcției selectate</span>
+              </div>
+            </div>
+          </section>
+
+        <section id="stampSection" class="step function-section">
           <div class="step-header">
-            <h2 class="step-title">3. SETĂRI ȘTAMPILĂ</h2>
+            <h2 class="step-title">SETĂRI ȘTAMPILĂ</h2>
             <label class="switch" aria-label="Setări ștampilă">
               <input id="stampToggle" type="checkbox" checked>
               <span class="slider"></span>
@@ -1379,9 +1642,9 @@ DEMO_HTML = """
           </div>
         </section>
 
-        <section class="step">
+        <section id="signatureSection" class="step function-section">
           <div class="step-header">
-            <h2 class="step-title">4. SETĂRI SEMNĂTURĂ</h2>
+            <h2 class="step-title">SETĂRI SEMNĂTURĂ</h2>
             <label class="switch" aria-label="Setări semnătură">
               <input id="signatureToggle" type="checkbox" checked>
               <span class="slider"></span>
@@ -1467,9 +1730,108 @@ DEMO_HTML = """
           </div>
         </section>
 
-        <section class="step">
+        <section id="placeholdersSection" class="step function-section">
           <div class="step-header">
-            <h2 class="step-title">5. SIGILIU ELECTRONIC</h2>
+            <h2 class="step-title">SEMNĂTURI MULTIPLE</h2>
+            <label class="switch" aria-label="Poziții pentru semnături multiple">
+              <input id="placeholdersToggle" type="checkbox">
+              <span class="slider"></span>
+            </label>
+          </div>
+          <div id="placeholdersPanel" class="section-body collapsed">
+            <div class="placeholder-actions">
+              <button id="addPlaceholderButton" class="mini-action" type="button">
+                <svg viewBox="0 0 24 24" aria-hidden="true">
+                  <path d="M12 5v14"></path>
+                  <path d="M5 12h14"></path>
+                </svg>
+                Adaugă poziție
+              </button>
+              <button id="removePlaceholderButton" class="mini-action danger" type="button">
+                <svg viewBox="0 0 24 24" aria-hidden="true">
+                  <path d="M3 6h18"></path>
+                  <path d="M8 6V4h8v2"></path>
+                  <path d="M19 6l-1 14H6L5 6"></path>
+                </svg>
+                Șterge poziția
+              </button>
+            </div>
+            <div id="placeholderList" class="placeholder-list" aria-label="Poziții de semnătură"></div>
+            <div class="field">
+              <label class="radio-row">
+                <input id="signFirstPlaceholder" type="checkbox">
+                Semnează prima poziție acum
+              </label>
+            </div>
+            <div id="signFirstPanel" class="section-body collapsed">
+              <div class="field">
+                <label for="placeholderSignReason">Motiv semnare</label>
+                <input id="placeholderSignReason" type="text" value="Semnare prima poziție">
+              </div>
+              <div class="field">
+                <label for="placeholderSignLocation">Locație</label>
+                <input id="placeholderSignLocation" type="text" value="București, România">
+              </div>
+              <div class="field">
+                <label for="placeholderToken">Token CSC OAuth <span style="font-weight:600;color:#748096">(opțional)</span></label>
+                <div class="token-row">
+                  <input id="placeholderToken" type="password" autocomplete="off">
+                  <button id="placeholderTokenVisibility" type="button" aria-label="Afișare token semnare prima poziție">
+                    <svg viewBox="0 0 24 24" aria-hidden="true">
+                      <path d="M2 12s3.5-6 10-6 10 6 10 6-3.5 6-10 6S2 12 2 12Z"></path>
+                      <circle cx="12" cy="12" r="3"></circle>
+                    </svg>
+                  </button>
+                </div>
+              </div>
+            </div>
+            <div class="field">
+              <label for="placeholderFieldName">Nume câmp</label>
+              <input id="placeholderFieldName" type="text" value="Signature1">
+            </div>
+            <div class="triple-grid">
+              <div class="field">
+                <label for="placeholderPage">Pagina</label>
+                <div class="input-wrap">
+                  <input id="placeholderPage" type="number" min="1" value="1">
+                  <span class="unit">/ <span class="page-count">1</span></span>
+                </div>
+              </div>
+              <div class="field">
+                <label for="placeholderX">Poziție X</label>
+                <div class="input-wrap">
+                  <input id="placeholderX" type="number" min="0" value="120">
+                  <span class="unit">mm</span>
+                </div>
+              </div>
+              <div class="field">
+                <label for="placeholderY">Poziție Y</label>
+                <div class="input-wrap">
+                  <input id="placeholderY" type="number" min="0" value="240">
+                  <span class="unit">mm</span>
+                </div>
+              </div>
+              <div class="field">
+                <label for="placeholderWidth">Lățime</label>
+                <div class="input-wrap">
+                  <input id="placeholderWidth" type="number" min="1" value="80">
+                  <span class="unit">mm</span>
+                </div>
+              </div>
+              <div class="field">
+                <label for="placeholderHeight">Înălțime</label>
+                <div class="input-wrap">
+                  <input id="placeholderHeight" type="number" min="1" value="25">
+                  <span class="unit">mm</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section id="sealSection" class="step function-section">
+          <div class="step-header">
+            <h2 class="step-title">SIGILIU ELECTRONIC</h2>
             <label class="switch" aria-label="Setări sigiliu electronic">
               <input id="sealToggle" type="checkbox">
               <span class="slider"></span>
@@ -1554,8 +1916,9 @@ DEMO_HTML = """
             </div>
           </div>
         </section>
+        </div>
 
-        <div class="sidebar-actions">
+        <div id="sidebarActions" class="sidebar-actions hidden">
           <button id="runButton" class="primary-action" type="button">
             <svg viewBox="0 0 24 24" aria-hidden="true">
               <path d="M8 5v14l11-7Z"></path>
@@ -1653,6 +2016,7 @@ DEMO_HTML = """
                   <span class="seal-caption">Sigiliu electronic<br>Instituție publică</span>
                   <span class="resize-handle" data-placement="seal" data-action="resize"></span>
                 </div>
+                <div id="placeholderLayer" class="placeholder-layer"></div>
               </div>
               <p class="placement-hint">
                 Trageți casetele pe document sau redimensionați-le din colț.
@@ -1713,6 +2077,7 @@ DEMO_HTML = """
   <script>
     const state = {
       mode: "both",
+      sidebarLayer: "menu",
       activePreview: "input",
       inputUrl: null,
       pageImageUrl: null,
@@ -1723,13 +2088,48 @@ DEMO_HTML = """
       pageHeight: 0,
       renderSeq: 0,
       drag: null,
-      zoom: 100
+      zoom: 100,
+      placeholders: [
+        {
+          id: 1,
+          fieldName: "Signature1",
+          page: 1,
+          x: 120,
+          y: 240,
+          width: 80,
+          height: 25
+        }
+      ],
+      activePlaceholderId: 1,
+      nextPlaceholderId: 2
     };
 
     const $ = (id) => document.getElementById(id);
     const PT_PER_MM = 72 / 25.4;
     const modeButtons = [...document.querySelectorAll("[data-mode]")];
     const previewButtons = [...document.querySelectorAll("[data-preview]")];
+    const modeDetails = {
+      sign: {
+        title: "Semnare",
+        subtitle: "Configurați semnătura CSC pentru document."
+      },
+      stamp: {
+        title: "Ștampilă",
+        subtitle: "Configurați marcajul vizibil aplicat pe PDF."
+      },
+      both: {
+        title: "Semnare + Ștampilă",
+        subtitle: "Configurați semnătura CSC și ștampila."
+      },
+      placeholders: {
+        title: "Semnături multiple",
+        subtitle: "Pregătiți pozițiile pentru mai mulți semnatari."
+      },
+      seal: {
+        title: "Sigiliu electronic",
+        subtitle: "Configurați sigiliul electronic instituțional."
+      }
+    };
 
     function numberValue(id) {
       return Number($(id).value);
@@ -1791,24 +2191,62 @@ DEMO_HTML = """
       if (mode === "seal") {
         return "Aplică sigiliul electronic";
       }
+      if (mode === "placeholders") {
+        return $("signFirstPlaceholder")?.checked
+          ? "Generează și semnează prima poziție"
+          : "Generează pozițiile de semnătură";
+      }
       return "Rulează semnarea / ștampilarea";
+    }
+
+    function updateDetailHeader() {
+      const detail = modeDetails[state.mode] || modeDetails.both;
+      $("detailTitle").textContent = detail.title;
+      $("detailSubtitle").textContent = detail.subtitle;
+    }
+
+    function showFunctionMenu() {
+      state.sidebarLayer = "menu";
+      $("functionMenuLayer").classList.remove("hidden");
+      $("functionDetailLayer").classList.add("hidden");
+      $("sidebarActions").classList.add("hidden");
+      updatePlacementBoxes();
+    }
+
+    function showFunctionDetail() {
+      state.sidebarLayer = "detail";
+      $("functionMenuLayer").classList.add("hidden");
+      $("functionDetailLayer").classList.remove("hidden");
+      $("sidebarActions").classList.remove("hidden");
+      updateDetailHeader();
+      updatePlacementBoxes();
     }
 
     function setMode(mode) {
       state.mode = mode;
       modeButtons.forEach((button) => {
-        button.classList.toggle("active", button.dataset.mode === mode);
+        const active = button.dataset.mode === mode;
+        button.classList.toggle("active", active);
+        button.setAttribute("aria-pressed", active ? "true" : "false");
       });
 
       const signing = mode === "sign" || mode === "both";
       const stamp = mode === "stamp" || mode === "both";
       const seal = mode === "seal";
+      const placeholders = mode === "placeholders";
       $("signatureToggle").checked = signing;
       $("stampToggle").checked = stamp;
       $("sealToggle").checked = seal;
+      $("placeholdersToggle").checked = placeholders;
       $("signaturePanel").classList.toggle("collapsed", !signing);
       $("stampPanel").classList.toggle("collapsed", !stamp);
       $("sealPanel").classList.toggle("collapsed", !seal);
+      $("placeholdersPanel").classList.toggle("collapsed", !placeholders);
+      $("signatureSection").classList.toggle("function-section-hidden", !signing);
+      $("stampSection").classList.toggle("function-section-hidden", !stamp);
+      $("sealSection").classList.toggle("function-section-hidden", !seal);
+      $("placeholdersSection").classList.toggle("function-section-hidden", !placeholders);
+      updateDetailHeader();
       $("runLabel").textContent = actionLabelForMode(mode);
       updatePlacementBoxes();
     }
@@ -1817,8 +2255,13 @@ DEMO_HTML = """
       const stamp = $("stampToggle").checked;
       const signing = $("signatureToggle").checked;
       const seal = $("sealToggle").checked;
+      const placeholders = $("placeholdersToggle").checked;
       if (seal) {
         setMode("seal");
+        return;
+      }
+      if (placeholders) {
+        setMode("placeholders");
         return;
       }
       if (stamp && signing) {
@@ -1853,6 +2296,13 @@ DEMO_HTML = """
       updatePlacementBoxes();
     }
 
+    function updateSignFirstVisibility() {
+      $("signFirstPanel").classList.toggle("collapsed", !$("signFirstPlaceholder").checked);
+      if (state.mode === "placeholders") {
+        $("runLabel").textContent = actionLabelForMode("placeholders");
+      }
+    }
+
     function updateRangeLabels() {
       $("stampOpacityValue").textContent = `${Math.round(numberValue("stampOpacity") * 100)}%`;
       $("stampBorderValue").textContent = `${numberValue("stampBorder")} pt`;
@@ -1868,16 +2318,164 @@ DEMO_HTML = """
       document.querySelectorAll(".page-count").forEach((node) => {
         node.textContent = state.pageCount;
       });
-      for (const id of ["pageNumber", "stampPage", "sigPage", "sealPage"]) {
+      for (const id of ["pageNumber", "stampPage", "sigPage", "sealPage", "placeholderPage"]) {
         $(id).max = String(state.pageCount);
         if (numberValue(id) > state.pageCount) {
           $(id).value = state.pageCount;
         }
       }
+      state.placeholders.forEach((placeholder) => {
+        placeholder.page = clamp(placeholder.page, 1, state.pageCount);
+      });
+      syncPlaceholderFieldsFromActive();
+      renderPlaceholderList();
     }
 
     function currentPageIndex() {
       return pageIndex("pageNumber");
+    }
+
+    function placeholderKind(id) {
+      return `placeholder:${id}`;
+    }
+
+    function isPlaceholderKind(kind) {
+      return kind.startsWith("placeholder:");
+    }
+
+    function placeholderIdFromKind(kind) {
+      return Number(kind.split(":")[1]);
+    }
+
+    function placeholderById(id) {
+      return state.placeholders.find((placeholder) => placeholder.id === id) || null;
+    }
+
+    function activePlaceholder() {
+      return placeholderById(state.activePlaceholderId) || state.placeholders[0];
+    }
+
+    function uniquePlaceholderName(startAt = state.placeholders.length + 1) {
+      const existing = new Set(state.placeholders.map((placeholder) => placeholder.fieldName));
+      let index = startAt;
+      let candidate = `Signature${index}`;
+      while (existing.has(candidate)) {
+        index += 1;
+        candidate = `Signature${index}`;
+      }
+      return candidate;
+    }
+
+    function syncPlaceholderFieldsFromActive() {
+      const placeholder = activePlaceholder();
+      if (!placeholder) {
+        return;
+      }
+      $("placeholderFieldName").value = placeholder.fieldName;
+      $("placeholderPage").value = placeholder.page;
+      $("placeholderX").value = placeholder.x;
+      $("placeholderY").value = placeholder.y;
+      $("placeholderWidth").value = placeholder.width;
+      $("placeholderHeight").value = placeholder.height;
+    }
+
+    function syncActivePlaceholderFromFields({ updatePage = false } = {}) {
+      const placeholder = activePlaceholder();
+      if (!placeholder) {
+        return;
+      }
+      placeholder.fieldName = $("placeholderFieldName").value || uniquePlaceholderName();
+      placeholder.page = clamp(numberValue("placeholderPage") || 1, 1, state.pageCount);
+      placeholder.x = Math.max(0, numberValue("placeholderX") || 0);
+      placeholder.y = Math.max(0, numberValue("placeholderY") || 0);
+      placeholder.width = Math.max(1, numberValue("placeholderWidth") || 1);
+      placeholder.height = Math.max(1, numberValue("placeholderHeight") || 1);
+      renderPlaceholderList();
+      updatePlacementBoxes();
+      if (updatePage && state.mode === "placeholders") {
+        $("pageNumber").value = placeholder.page;
+        renderPagePreview();
+      }
+    }
+
+    function renderPlaceholderList() {
+      const list = $("placeholderList");
+      list.replaceChildren();
+      state.placeholders.forEach((placeholder, index) => {
+        const button = document.createElement("button");
+        button.type = "button";
+        button.className = "placeholder-item";
+        button.classList.toggle("active", placeholder.id === state.activePlaceholderId);
+        button.dataset.placeholderId = String(placeholder.id);
+
+        const badge = document.createElement("span");
+        badge.className = "placeholder-index";
+        badge.textContent = String(index + 1);
+
+        const name = document.createElement("span");
+        name.className = "placeholder-name";
+        name.textContent = placeholder.fieldName || `Signature${index + 1}`;
+
+        const page = document.createElement("span");
+        page.className = "placeholder-page";
+        page.textContent = `Pag. ${placeholder.page}`;
+
+        button.replaceChildren(badge, name, page);
+        button.addEventListener("click", () => selectPlaceholder(placeholder.id));
+        list.append(button);
+      });
+      $("removePlaceholderButton").disabled = state.placeholders.length <= 1;
+    }
+
+    function selectPlaceholder(id, { updateBoxes = true } = {}) {
+      if (!placeholderById(id)) {
+        return;
+      }
+      state.activePlaceholderId = id;
+      syncPlaceholderFieldsFromActive();
+      renderPlaceholderList();
+      if (updateBoxes) {
+        updatePlacementBoxes();
+      } else {
+        document.querySelectorAll(".placement-box.placeholder").forEach((box) => {
+          box.classList.toggle("active", Number(box.dataset.placeholderId) === id);
+        });
+      }
+    }
+
+    function addPlaceholder() {
+      const id = state.nextPlaceholderId;
+      state.nextPlaceholderId += 1;
+      const page = clamp(numberValue("pageNumber") || 1, 1, state.pageCount);
+      const offset = (state.placeholders.length % 4) * 12;
+      state.placeholders.push({
+        id,
+        fieldName: uniquePlaceholderName(),
+        page,
+        x: 120,
+        y: Math.max(20, 240 - offset),
+        width: 80,
+        height: 25
+      });
+      selectPlaceholder(id);
+      setMode("placeholders");
+    }
+
+    function removeActivePlaceholder() {
+      if (state.placeholders.length <= 1) {
+        return;
+      }
+      const index = state.placeholders.findIndex(
+        (placeholder) => placeholder.id === state.activePlaceholderId
+      );
+      state.placeholders = state.placeholders.filter(
+        (placeholder) => placeholder.id !== state.activePlaceholderId
+      );
+      const nextIndex = clamp(index, 0, state.placeholders.length - 1);
+      state.activePlaceholderId = state.placeholders[nextIndex].id;
+      syncPlaceholderFieldsFromActive();
+      renderPlaceholderList();
+      updatePlacementBoxes();
     }
 
     async function renderPagePreview() {
@@ -1948,6 +2546,19 @@ DEMO_HTML = """
     }
 
     function placementValues(kind) {
+      if (isPlaceholderKind(kind)) {
+        const placeholder = placeholderById(placeholderIdFromKind(kind));
+        if (!placeholder) {
+          return null;
+        }
+        return {
+          page: placeholder.page - 1,
+          x: mmToPt(placeholder.x),
+          y: mmToPt(placeholder.y),
+          width: mmToPt(placeholder.width),
+          height: mmToPt(placeholder.height)
+        };
+      }
       if (kind === "stamp") {
         return {
           page: pageIndex("stampPage"),
@@ -1976,8 +2587,15 @@ DEMO_HTML = """
     }
 
     function isPlacementVisible(kind) {
-      if (!state.pageImageUrl || placementValues(kind).page !== currentPageIndex()) {
+      if (state.sidebarLayer !== "detail") {
         return false;
+      }
+      const values = placementValues(kind);
+      if (!state.pageImageUrl || !values || values.page !== currentPageIndex()) {
+        return false;
+      }
+      if (isPlaceholderKind(kind)) {
+        return state.mode === "placeholders" && $("placeholdersToggle").checked;
       }
       if (kind === "stamp") {
         return state.mode !== "sign" && $("stampToggle").checked;
@@ -1989,6 +2607,11 @@ DEMO_HTML = """
     }
 
     function placementBoxFor(kind) {
+      if (isPlaceholderKind(kind)) {
+        return document.querySelector(
+          `.placement-box.placeholder[data-placeholder-id="${placeholderIdFromKind(kind)}"]`
+        );
+      }
       if (kind === "stamp") {
         return $("stampBox");
       }
@@ -1996,6 +2619,51 @@ DEMO_HTML = """
         return $("sealBox");
       }
       return $("signatureBox");
+    }
+
+    function renderPlaceholderBoxes(metrics) {
+      const layer = $("placeholderLayer");
+      layer.replaceChildren();
+      if (!metrics || state.mode !== "placeholders" || !state.pageImageUrl) {
+        return;
+      }
+
+      state.placeholders.forEach((placeholder, index) => {
+        const kind = placeholderKind(placeholder.id);
+        if (!isPlacementVisible(kind)) {
+          return;
+        }
+        const box = document.createElement("div");
+        box.className = "placement-box placeholder";
+        box.classList.toggle("active", placeholder.id === state.activePlaceholderId);
+        box.dataset.placeholderId = String(placeholder.id);
+        box.dataset.placement = kind;
+
+        const script = document.createElement("span");
+        script.className = "sig-script";
+        script.textContent = `Semnătură ${index + 1}`;
+
+        const caption = document.createElement("span");
+        caption.className = "placeholder-caption";
+        caption.textContent = placeholder.fieldName || `Signature${index + 1}`;
+
+        const handle = document.createElement("span");
+        handle.className = "resize-handle";
+        handle.dataset.action = "resize";
+        handle.dataset.placement = kind;
+
+        box.replaceChildren(script, caption, handle);
+        applyBoxStyle(box, placementValues(kind), metrics);
+        box.addEventListener("pointerdown", (event) => {
+          selectPlaceholder(placeholder.id, { updateBoxes: false });
+          startPlacementDrag(
+            event,
+            kind,
+            event.target.dataset.action === "resize" ? "resize" : "move"
+          );
+        });
+        layer.append(box);
+      });
     }
 
     function applyBoxStyle(box, values, metrics) {
@@ -2036,6 +2704,7 @@ DEMO_HTML = """
         document.createElement("br"),
         document.createTextNode($("sealLocation").value || "București, România")
       );
+      renderPlaceholderBoxes(metrics);
     }
 
     function clamp(value, min, max) {
@@ -2048,7 +2717,21 @@ DEMO_HTML = """
       const height = (rect.height / metrics.height) * state.pageHeight;
       const y = state.pageHeight - ((rect.top + rect.height) / metrics.height) * state.pageHeight;
 
-      if (kind === "stamp") {
+      if (isPlaceholderKind(kind)) {
+        const placeholder = placeholderById(placeholderIdFromKind(kind));
+        if (!placeholder) {
+          return;
+        }
+        placeholder.page = numberValue("pageNumber");
+        placeholder.x = roundMm(ptToMm(x));
+        placeholder.y = roundMm(ptToMm(y));
+        placeholder.width = roundMm(ptToMm(width));
+        placeholder.height = roundMm(ptToMm(height));
+        if (placeholder.id === state.activePlaceholderId) {
+          syncPlaceholderFieldsFromActive();
+        }
+        renderPlaceholderList();
+      } else if (kind === "stamp") {
         $("stampPage").value = numberValue("pageNumber");
         $("stampX").value = roundMm(ptToMm(x));
         $("stampY").value = roundMm(ptToMm(y));
@@ -2076,18 +2759,24 @@ DEMO_HTML = """
       }
       event.preventDefault();
       const box = placementBoxFor(kind);
+      if (!box) {
+        return;
+      }
       const boxRect = box.getBoundingClientRect();
-      const canvasRect = $("placementCanvas").getBoundingClientRect();
+      const imageRect = $("pageImage").getBoundingClientRect();
       state.drag = {
         kind,
         action,
         metrics,
+        pointerId: event.pointerId,
         startX: event.clientX,
         startY: event.clientY,
-        left: boxRect.left - canvasRect.left,
-        top: boxRect.top - canvasRect.top,
+        left: boxRect.left - imageRect.left,
+        top: boxRect.top - imageRect.top,
         width: boxRect.width,
-        height: boxRect.height
+        height: boxRect.height,
+        next: null,
+        frame: null
       };
       box.setPointerCapture(event.pointerId);
     }
@@ -2098,6 +2787,9 @@ DEMO_HTML = """
       }
       const drag = state.drag;
       const box = placementBoxFor(drag.kind);
+      if (!box) {
+        return;
+      }
       const dx = event.clientX - drag.startX;
       const dy = event.clientY - drag.startY;
       const minWidth = drag.kind === "stamp" ? 36 : 56;
@@ -2117,14 +2809,49 @@ DEMO_HTML = """
         next.top = clamp(drag.top + dy, 0, drag.metrics.height - drag.height);
       }
 
-      box.style.left = `${next.left}px`;
-      box.style.top = `${next.top}px`;
-      box.style.width = `${next.width}px`;
-      box.style.height = `${next.height}px`;
-      applyPlacementToFields(drag.kind, next, drag.metrics);
+      drag.next = next;
+      if (drag.frame !== null) {
+        return;
+      }
+      drag.frame = requestAnimationFrame(() => {
+        drag.frame = null;
+        const current = drag.next || next;
+        box.style.left = `${current.left}px`;
+        box.style.top = `${current.top}px`;
+        box.style.width = `${current.width}px`;
+        box.style.height = `${current.height}px`;
+      });
     }
 
-    function endPlacementDrag() {
+    function endPlacementDrag(event) {
+      if (!state.drag) {
+        return;
+      }
+      const drag = state.drag;
+      const box = placementBoxFor(drag.kind);
+      const finalRect = drag.next || {
+        left: drag.left,
+        top: drag.top,
+        width: drag.width,
+        height: drag.height
+      };
+      if (drag.frame !== null) {
+        cancelAnimationFrame(drag.frame);
+      }
+      if (box) {
+        box.style.left = `${finalRect.left}px`;
+        box.style.top = `${finalRect.top}px`;
+        box.style.width = `${finalRect.width}px`;
+        box.style.height = `${finalRect.height}px`;
+        if (event && typeof box.releasePointerCapture === "function") {
+          try {
+            box.releasePointerCapture(drag.pointerId);
+          } catch (error) {
+            // The pointer may already be released by the browser.
+          }
+        }
+      }
+      applyPlacementToFields(drag.kind, finalRect, drag.metrics);
       state.drag = null;
       updatePlacementBoxes();
     }
@@ -2194,6 +2921,31 @@ DEMO_HTML = """
       return metadata;
     }
 
+    function signaturePlaceholdersMetadata() {
+      return {
+        empty_field_appearance: true,
+        sign_first: $("signFirstPlaceholder").checked,
+        sign_reason: $("placeholderSignReason").value || null,
+        sign_location: $("placeholderSignLocation").value || null,
+        placeholders: state.placeholders.map((placeholder) => {
+          const x = mmToPt(placeholder.x);
+          const y = mmToPt(placeholder.y);
+          const width = mmToPt(placeholder.width);
+          const height = mmToPt(placeholder.height);
+          return {
+            field_name: placeholder.fieldName,
+            box: {
+              page: Math.max(0, placeholder.page - 1),
+              x1: roundPt(x),
+              y1: roundPt(y),
+              x2: roundPt(x + width),
+              y2: roundPt(y + height)
+            }
+          };
+        })
+      };
+    }
+
     function selectedFile() {
       const file = $("pdfFile").files[0];
       if (!file) {
@@ -2229,6 +2981,12 @@ DEMO_HTML = """
           endpoint = "/v1/seal/pdf";
           form.append("metadata", JSON.stringify(sealMetadata()));
           state.outputName = "rezultat-sigilat.pdf";
+        } else if (state.mode === "placeholders") {
+          endpoint = "/v1/signature-placeholders/pdf";
+          form.append("metadata", JSON.stringify(signaturePlaceholdersMetadata()));
+          state.outputName = $("signFirstPlaceholder").checked
+            ? "pozitii-semnaturi-prima-semnata.pdf"
+            : "pozitii-semnaturi.pdf";
         } else {
           form.append("metadata", JSON.stringify(signingMetadata()));
           state.outputName = "rezultat-semnat.pdf";
@@ -2237,8 +2995,11 @@ DEMO_HTML = """
         const headers = {};
         const token = $("token").value.trim();
         const sealToken = $("sealToken").value.trim();
+        const placeholderToken = $("placeholderToken").value.trim();
         if (state.mode === "seal" && sealToken) {
           headers["X-CSC-Seal-OAuth-Token"] = sealToken;
+        } else if (state.mode === "placeholders" && $("signFirstPlaceholder").checked && placeholderToken) {
+          headers["X-CSC-OAuth-Token"] = placeholderToken;
         } else if (token) {
           headers["X-CSC-OAuth-Token"] = token;
         }
@@ -2262,9 +3023,14 @@ DEMO_HTML = """
         state.outputUrl = URL.createObjectURL(blob);
         $("outputFrame").src = state.outputUrl;
         setDownload(state.outputUrl, state.outputName);
-        const successText = state.mode === "seal"
-          ? "Documentul a fost sigilat electronic cu succes."
-          : "Documentul a fost semnat și ștampilat cu succes.";
+        let successText = "Documentul a fost semnat și ștampilat cu succes.";
+        if (state.mode === "seal") {
+          successText = "Documentul a fost sigilat electronic cu succes.";
+        } else if (state.mode === "placeholders") {
+          successText = $("signFirstPlaceholder").checked
+            ? "Pozițiile au fost adăugate, iar prima poziție a fost semnată."
+            : "Pozițiile pentru semnături multiple au fost adăugate în PDF.";
+        }
         setStatus(successText);
         setResultStatus("Succes", successText);
         setPreview("output");
@@ -2300,6 +3066,10 @@ DEMO_HTML = """
     $("stampToggle").addEventListener("change", syncModeFromToggles);
     $("signatureToggle").addEventListener("change", syncModeFromToggles);
     $("sealToggle").addEventListener("change", syncModeFromToggles);
+    $("placeholdersToggle").addEventListener("change", syncModeFromToggles);
+    $("signFirstPlaceholder").addEventListener("change", updateSignFirstVisibility);
+    $("addPlaceholderButton").addEventListener("click", addPlaceholder);
+    $("removePlaceholderButton").addEventListener("click", removeActivePlaceholder);
     $("stampOpacity").addEventListener("input", updateRangeLabels);
     $("stampBorder").addEventListener("input", updateRangeLabels);
     $("stampTextColor").addEventListener("input", (event) => updateColorLabel(event.target));
@@ -2309,6 +3079,7 @@ DEMO_HTML = """
     $("location").addEventListener("input", updatePlacementBoxes);
     $("sealFieldName").addEventListener("input", updatePlacementBoxes);
     $("sealLocation").addEventListener("input", updatePlacementBoxes);
+    $("placeholderFieldName").addEventListener("input", () => syncActivePlaceholderFromFields());
     for (const id of [
       "stampX",
       "stampY",
@@ -2324,6 +3095,14 @@ DEMO_HTML = """
       "sealHeight"
     ]) {
       $(id).addEventListener("input", updatePlacementBoxes);
+    }
+    for (const id of [
+      "placeholderX",
+      "placeholderY",
+      "placeholderWidth",
+      "placeholderHeight"
+    ]) {
+      $(id).addEventListener("input", () => syncActivePlaceholderFromFields());
     }
     $("pageNumber").addEventListener("change", renderPagePreview);
     $("stampPage").addEventListener("change", () => {
@@ -2343,6 +3122,9 @@ DEMO_HTML = """
         $("pageNumber").value = $("sealPage").value;
         renderPagePreview();
       }
+    });
+    $("placeholderPage").addEventListener("change", () => {
+      syncActivePlaceholderFromFields({ updatePage: true });
     });
     $("stampBox").addEventListener("pointerdown", (event) => {
       startPlacementDrag(
@@ -2367,7 +3149,9 @@ DEMO_HTML = """
     });
     window.addEventListener("pointermove", movePlacement);
     window.addEventListener("pointerup", endPlacementDrag);
+    window.addEventListener("pointercancel", endPlacementDrag);
     $("runButton").addEventListener("click", run);
+    $("backToFunctionList").addEventListener("click", showFunctionMenu);
     $("refreshPreview").addEventListener("click", renderPagePreview);
     $("resetPreviewButton").addEventListener("click", renderPagePreview);
     $("clearButton").addEventListener("click", () => {
@@ -2405,6 +3189,9 @@ DEMO_HTML = """
     $("sealTokenVisibility").addEventListener("click", () => {
       $("sealToken").type = $("sealToken").type === "password" ? "text" : "password";
     });
+    $("placeholderTokenVisibility").addEventListener("click", () => {
+      $("placeholderToken").type = $("placeholderToken").type === "password" ? "text" : "password";
+    });
     $("zoomOut").addEventListener("click", () => {
       state.zoom = Math.max(60, state.zoom - 10);
       $("zoomLevel").textContent = `${state.zoom}%`;
@@ -2415,7 +3202,10 @@ DEMO_HTML = """
     });
 
     modeButtons.forEach((button) => {
-      button.addEventListener("click", () => setMode(button.dataset.mode));
+      button.addEventListener("click", () => {
+        setMode(button.dataset.mode);
+        showFunctionDetail();
+      });
     });
     previewButtons.forEach((button) => {
       button.addEventListener("click", () => setPreview(button.dataset.preview));
@@ -2424,7 +3214,11 @@ DEMO_HTML = """
     updateRangeLabels();
     updateSignatureVisibility();
     updateSealVisibility();
+    updateSignFirstVisibility();
+    syncPlaceholderFieldsFromActive();
+    renderPlaceholderList();
     setMode("both");
+    showFunctionMenu();
     setPreview("input");
   </script>
 </body>

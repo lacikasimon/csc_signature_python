@@ -5,7 +5,7 @@ from typing import Optional
 import aiohttp
 from pyhanko.pdf_utils import layout
 from pyhanko.pdf_utils.incremental_writer import IncrementalPdfFileWriter
-from pyhanko.pdf_utils.misc import PdfReadError
+from pyhanko.pdf_utils.misc import PdfReadError, PdfWriteError
 from pyhanko.sign import fields
 from pyhanko.sign.general import SigningError
 from pyhanko.sign.signers import PdfSignatureMetadata, async_sign_pdf
@@ -20,7 +20,13 @@ from pyhanko.pdf_utils.text import TextBoxStyle
 from .config import Settings
 from .csc import HashPinnedCSCAuthManager
 from .errors import CSCProviderError, CSCProviderTimeoutError, InvalidPDFError
-from .models import ElectronicSealMetadata, SigningMetadata, StampMetadata
+from .models import (
+    ElectronicSealMetadata,
+    SignaturePlaceholder,
+    SignaturePlaceholdersMetadata,
+    SigningMetadata,
+    StampMetadata,
+)
 
 
 class PDFSigningService:
@@ -49,6 +55,7 @@ class PDFSigningService:
         *,
         credential_id: Optional[str] = None,
         for_seal: bool = False,
+        existing_fields_only: bool = False,
     ) -> bytes:
         self._assert_pdf(pdf_bytes)
         if metadata.stamp is not None:
@@ -86,7 +93,9 @@ class PDFSigningService:
             location=metadata.location,
             subfilter=fields.SigSeedSubFilter.PADES,
         )
-        new_field_spec = self._new_field_spec(metadata)
+        new_field_spec = (
+            None if existing_fields_only else self._new_field_spec(metadata)
+        )
         output = BytesIO()
 
         try:
@@ -95,7 +104,7 @@ class PDFSigningService:
                 signature_meta=signature_meta,
                 signer=signer,
                 new_field_spec=new_field_spec,
-                existing_fields_only=False,
+                existing_fields_only=existing_fields_only,
                 output=output,
             )
         except CSCProviderTimeoutError:
@@ -116,6 +125,19 @@ class PDFSigningService:
             raise CSCProviderError("pyHanko CSC signing failed") from exc
 
         return output.getvalue()
+
+    async def sign_existing_field_pdf(
+        self,
+        pdf_bytes: bytes,
+        metadata: SigningMetadata,
+        oauth_token: Optional[str] = None,
+    ) -> bytes:
+        return await self.sign_pdf(
+            pdf_bytes,
+            metadata,
+            oauth_token=oauth_token,
+            existing_fields_only=True,
+        )
 
     async def seal_pdf(
         self,
@@ -161,6 +183,32 @@ class PDFSigningService:
             raise InvalidPDFError("Input is not a readable PDF") from exc
         except (IndexError, ValueError, layout.LayoutError) as exc:
             raise InvalidPDFError("Stamp metadata is not valid for this PDF") from exc
+
+    def add_signature_placeholders(
+        self,
+        pdf_bytes: bytes,
+        metadata: SignaturePlaceholdersMetadata,
+    ) -> bytes:
+        self._assert_pdf(pdf_bytes)
+        try:
+            writer = IncrementalPdfFileWriter(BytesIO(pdf_bytes))
+            for placeholder in metadata.placeholders:
+                fields.append_signature_field(
+                    writer,
+                    self._placeholder_field_spec(
+                        placeholder,
+                        empty_field_appearance=metadata.empty_field_appearance,
+                    ),
+                )
+            output = BytesIO()
+            writer.write(output)
+            return output.getvalue()
+        except PdfReadError as exc:
+            raise InvalidPDFError("Input is not a readable PDF") from exc
+        except (IndexError, ValueError, PdfWriteError) as exc:
+            raise InvalidPDFError(
+                "Signature placeholder metadata is not valid for this PDF"
+            ) from exc
 
     def _session_info(
         self,
@@ -222,6 +270,19 @@ class PDFSigningService:
             sig_field_name=metadata.field_name,
             on_page=box.page,
             box=box.as_tuple(),
+        )
+
+    @staticmethod
+    def _placeholder_field_spec(
+        placeholder: SignaturePlaceholder,
+        *,
+        empty_field_appearance: bool,
+    ) -> fields.SigFieldSpec:
+        return fields.SigFieldSpec(
+            sig_field_name=placeholder.field_name,
+            on_page=placeholder.box.page,
+            box=placeholder.box.as_tuple(),
+            empty_field_appearance=empty_field_appearance,
         )
 
     @staticmethod

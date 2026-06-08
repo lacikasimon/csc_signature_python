@@ -1,11 +1,17 @@
 from io import BytesIO
 
 from pyhanko.pdf_utils.reader import PdfFileReader
+from pyhanko.sign import fields
 import pytest
 
 from csc_signing_service.config import Settings
 from csc_signing_service.errors import InvalidPDFError
-from csc_signing_service.models import StampMetadata
+from csc_signing_service.models import (
+    SignatureBox,
+    SignaturePlaceholder,
+    SignaturePlaceholdersMetadata,
+    StampMetadata,
+)
 from csc_signing_service.signing import PDFSigningService
 
 
@@ -39,6 +45,45 @@ def test_stamp_pdf_rejects_missing_template_parameter(sample_pdf_bytes):
         service.stamp_pdf(
             sample_pdf_bytes,
             StampMetadata(text="Missing %(unknown)s"),
+        )
+
+
+def test_add_signature_placeholders_creates_empty_signature_fields(sample_pdf_bytes):
+    service = PDFSigningService(Settings(_env_file=None), session=None)
+    output = service.add_signature_placeholders(
+        sample_pdf_bytes,
+        SignaturePlaceholdersMetadata(
+            placeholders=[
+                SignaturePlaceholder(
+                    field_name="Semnatar1",
+                    box=SignatureBox(page=0, x1=72, y1=72, x2=190, y2=120),
+                ),
+                SignaturePlaceholder(
+                    field_name="Semnatar2",
+                    box=SignatureBox(page=0, x1=220, y1=72, x2=340, y2=120),
+                ),
+            ]
+        ),
+    )
+
+    assert output.startswith(b"%PDF-")
+    reader = PdfFileReader(BytesIO(output))
+    field_names = [
+        str(field_name)
+        for field_name, value, _ in fields.enumerate_sig_fields(reader)
+        if value is None
+    ]
+
+    assert field_names == ["Semnatar1", "Semnatar2"]
+
+
+def test_add_signature_placeholders_rejects_invalid_pdf():
+    service = PDFSigningService(Settings(_env_file=None), session=None)
+
+    with pytest.raises(InvalidPDFError):
+        service.add_signature_placeholders(
+            b"not a pdf",
+            SignaturePlaceholdersMetadata(),
         )
 
 
