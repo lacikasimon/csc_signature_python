@@ -6,6 +6,7 @@ from starlette.datastructures import UploadFile
 
 from csc_signing_service.api import (
     _parse_metadata,
+    _parse_seal_metadata,
     _parse_stamp_metadata,
     _read_upload,
 )
@@ -44,6 +45,25 @@ def test_parse_empty_stamp_metadata_uses_defaults():
     assert metadata.text == "Demo stamp %(ts)s"
     assert metadata.page == 0
     assert metadata.width == 220
+
+
+def test_parse_empty_seal_metadata_uses_defaults():
+    metadata = _parse_seal_metadata(None)
+
+    assert metadata.field_name == "SigiliuElectronic1"
+    assert metadata.reason == "Sigiliu electronic instituțional"
+    assert metadata.location == "București, România"
+    assert metadata.signature_box is None
+
+
+def test_parse_seal_metadata_rejects_invalid_box():
+    with pytest.raises(HTTPException) as exc_info:
+        _parse_seal_metadata(
+            '{"signature_box": {"page": 0, "x1": 5, '
+            '"y1": 5, "x2": 5, "y2": 20}}'
+        )
+
+    assert exc_info.value.status_code == 422
 
 
 def test_parse_invalid_stamp_metadata_raises_422():

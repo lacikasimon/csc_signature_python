@@ -40,3 +40,23 @@ def test_stamp_pdf_rejects_missing_template_parameter(sample_pdf_bytes):
             sample_pdf_bytes,
             StampMetadata(text="Missing %(unknown)s"),
         )
+
+
+def test_seal_session_info_uses_seal_credential_and_token():
+    settings = Settings(
+        csc_service_url="http://csc.example",
+        csc_oauth_token="sign-token",
+        csc_seal_oauth_token="seal-token",
+        csc_seal_credential_id="testing-ca/institution-seal",
+        _env_file=None,
+    )
+    service = PDFSigningService(settings, session=None)
+
+    session_info = service._session_info(
+        credential_id=settings.seal_credential_id,
+        for_seal=True,
+    )
+
+    assert session_info.service_url == "http://csc.example"
+    assert session_info.credential_id == "testing-ca/institution-seal"
+    assert session_info.oauth_token == "seal-token"

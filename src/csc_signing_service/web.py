@@ -348,7 +348,7 @@ DEMO_HTML = """
 
     .mode-grid {
       display: grid;
-      grid-template-columns: repeat(3, minmax(0, 1fr));
+      grid-template-columns: repeat(2, minmax(0, 1fr));
       gap: 10px;
     }
 
@@ -561,7 +561,8 @@ DEMO_HTML = """
       accent-color: var(--blue);
     }
 
-    .signature-box-fields.hidden {
+    .signature-box-fields.hidden,
+    .seal-box-fields.hidden {
       display: none;
     }
 
@@ -840,6 +841,37 @@ DEMO_HTML = """
       text-transform: none;
     }
 
+    .placement-box.seal {
+      border-color: #118a56;
+      color: #0e7148;
+      background: rgba(238, 252, 246, 0.9);
+      align-content: center;
+      justify-items: center;
+      gap: 2px;
+      padding: 6px 8px;
+      text-transform: uppercase;
+    }
+
+    .seal-mark {
+      width: 30px;
+      height: 30px;
+      display: inline-grid;
+      place-items: center;
+      border: 2px solid currentColor;
+      border-radius: 999px;
+      font-size: 12px;
+      font-weight: 900;
+      line-height: 1;
+    }
+
+    .seal-caption {
+      font-size: 9px;
+      font-weight: 900;
+      color: #174333;
+      text-align: center;
+      text-transform: none;
+    }
+
     .sig-script {
       font-family: "Segoe Script", "Brush Script MT", cursive;
       font-size: clamp(14px, 2vw, 22px);
@@ -1088,6 +1120,15 @@ DEMO_HTML = """
 
       .brand-title h1 {
         font-size: 18px;
+        white-space: normal;
+      }
+
+      .brand-title {
+        flex-wrap: wrap;
+      }
+
+      .demo-badge {
+        display: none;
       }
 
       .brand-subtitle {
@@ -1236,6 +1277,14 @@ DEMO_HTML = """
                 <path d="M4 7h7"></path>
               </svg>
               Semnare + Ștampilă
+            </button>
+            <button class="mode-button" type="button" data-mode="seal">
+              <svg viewBox="0 0 24 24" aria-hidden="true">
+                <path d="M12 3 20 6v6c0 5-3.4 8-8 9-4.6-1-8-4-8-9V6l8-3Z"></path>
+                <path d="M9 12h6"></path>
+                <path d="M12 9v6"></path>
+              </svg>
+              Sigiliu electronic
             </button>
           </div>
         </section>
@@ -1418,6 +1467,94 @@ DEMO_HTML = """
           </div>
         </section>
 
+        <section class="step">
+          <div class="step-header">
+            <h2 class="step-title">5. SIGILIU ELECTRONIC</h2>
+            <label class="switch" aria-label="Setări sigiliu electronic">
+              <input id="sealToggle" type="checkbox">
+              <span class="slider"></span>
+            </label>
+          </div>
+          <div id="sealPanel" class="section-body collapsed">
+            <div class="field">
+              <label for="sealFieldName">Nume câmp sigiliu</label>
+              <input id="sealFieldName" type="text" value="SigiliuElectronic1">
+            </div>
+            <div class="field">
+              <label for="sealReason">Motiv</label>
+              <input id="sealReason" type="text" value="Sigiliu electronic instituțional">
+            </div>
+            <div class="field">
+              <label for="sealLocation">Locație</label>
+              <input id="sealLocation" type="text" value="București, România">
+            </div>
+            <div class="field">
+              <span class="field-label">Tip sigiliu</span>
+              <div class="radio-row">
+                <label>
+                  <input id="visibleSeal" type="radio" name="sealVisibility" value="visible" checked>
+                  Sigiliu vizibil
+                </label>
+                <label>
+                  <input id="invisibleSeal" type="radio" name="sealVisibility" value="invisible">
+                  Sigiliu invizibil
+                </label>
+              </div>
+            </div>
+            <div id="sealBoxFields" class="seal-box-fields">
+              <div class="triple-grid">
+                <div class="field">
+                  <label for="sealPage">Pagina</label>
+                  <div class="input-wrap">
+                    <input id="sealPage" type="number" min="1" value="1">
+                    <span class="unit">/ <span class="page-count">1</span></span>
+                  </div>
+                </div>
+                <div class="field">
+                  <label for="sealX">Poziție X</label>
+                  <div class="input-wrap">
+                    <input id="sealX" type="number" min="0" value="135">
+                    <span class="unit">mm</span>
+                  </div>
+                </div>
+                <div class="field">
+                  <label for="sealY">Poziție Y</label>
+                  <div class="input-wrap">
+                    <input id="sealY" type="number" min="0" value="165">
+                    <span class="unit">mm</span>
+                  </div>
+                </div>
+                <div class="field">
+                  <label for="sealWidth">Lățime</label>
+                  <div class="input-wrap">
+                    <input id="sealWidth" type="number" min="1" value="58">
+                    <span class="unit">mm</span>
+                  </div>
+                </div>
+                <div class="field">
+                  <label for="sealHeight">Înălțime</label>
+                  <div class="input-wrap">
+                    <input id="sealHeight" type="number" min="1" value="32">
+                    <span class="unit">mm</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="field">
+              <label for="sealToken">Token CSC sigiliu <span style="font-weight:600;color:#748096">(opțional)</span></label>
+              <div class="token-row">
+                <input id="sealToken" type="password" autocomplete="off">
+                <button id="sealTokenVisibility" type="button" aria-label="Afișare token sigiliu">
+                  <svg viewBox="0 0 24 24" aria-hidden="true">
+                    <path d="M2 12s3.5-6 10-6 10 6 10 6-3.5 6-10 6S2 12 2 12Z"></path>
+                    <circle cx="12" cy="12" r="3"></circle>
+                  </svg>
+                </button>
+              </div>
+            </div>
+          </div>
+        </section>
+
         <div class="sidebar-actions">
           <button id="runButton" class="primary-action" type="button">
             <svg viewBox="0 0 24 24" aria-hidden="true">
@@ -1510,6 +1647,11 @@ DEMO_HTML = """
                   <span class="sig-script">Semnătură</span>
                   <span class="sig-caption">Director Juridic<br>București, România</span>
                   <span class="resize-handle" data-placement="signature" data-action="resize"></span>
+                </div>
+                <div id="sealBox" class="placement-box seal hidden" data-placement="seal">
+                  <span class="seal-mark">SE</span>
+                  <span class="seal-caption">Sigiliu electronic<br>Instituție publică</span>
+                  <span class="resize-handle" data-placement="seal" data-action="resize"></span>
                 </div>
               </div>
               <p class="placement-hint">
@@ -1646,6 +1788,9 @@ DEMO_HTML = """
       if (mode === "sign") {
         return "Rulează semnarea";
       }
+      if (mode === "seal") {
+        return "Aplică sigiliul electronic";
+      }
       return "Rulează semnarea / ștampilarea";
     }
 
@@ -1655,12 +1800,15 @@ DEMO_HTML = """
         button.classList.toggle("active", button.dataset.mode === mode);
       });
 
-      const signing = mode !== "stamp";
-      const stamp = mode !== "sign";
+      const signing = mode === "sign" || mode === "both";
+      const stamp = mode === "stamp" || mode === "both";
+      const seal = mode === "seal";
       $("signatureToggle").checked = signing;
       $("stampToggle").checked = stamp;
+      $("sealToggle").checked = seal;
       $("signaturePanel").classList.toggle("collapsed", !signing);
       $("stampPanel").classList.toggle("collapsed", !stamp);
+      $("sealPanel").classList.toggle("collapsed", !seal);
       $("runLabel").textContent = actionLabelForMode(mode);
       updatePlacementBoxes();
     }
@@ -1668,6 +1816,11 @@ DEMO_HTML = """
     function syncModeFromToggles() {
       const stamp = $("stampToggle").checked;
       const signing = $("signatureToggle").checked;
+      const seal = $("sealToggle").checked;
+      if (seal) {
+        setMode("seal");
+        return;
+      }
       if (stamp && signing) {
         setMode("both");
       } else if (stamp) {
@@ -1695,6 +1848,11 @@ DEMO_HTML = """
       updatePlacementBoxes();
     }
 
+    function updateSealVisibility() {
+      $("sealBoxFields").classList.toggle("hidden", !$("visibleSeal").checked);
+      updatePlacementBoxes();
+    }
+
     function updateRangeLabels() {
       $("stampOpacityValue").textContent = `${Math.round(numberValue("stampOpacity") * 100)}%`;
       $("stampBorderValue").textContent = `${numberValue("stampBorder")} pt`;
@@ -1710,7 +1868,7 @@ DEMO_HTML = """
       document.querySelectorAll(".page-count").forEach((node) => {
         node.textContent = state.pageCount;
       });
-      for (const id of ["pageNumber", "stampPage", "sigPage"]) {
+      for (const id of ["pageNumber", "stampPage", "sigPage", "sealPage"]) {
         $(id).max = String(state.pageCount);
         if (numberValue(id) > state.pageCount) {
           $(id).value = state.pageCount;
@@ -1799,6 +1957,15 @@ DEMO_HTML = """
           height: mmToPt(numberValue("stampHeight"))
         };
       }
+      if (kind === "seal") {
+        return {
+          page: pageIndex("sealPage"),
+          x: mmToPt(numberValue("sealX")),
+          y: mmToPt(numberValue("sealY")),
+          width: mmToPt(numberValue("sealWidth")),
+          height: mmToPt(numberValue("sealHeight"))
+        };
+      }
       return {
         page: pageIndex("sigPage"),
         x: mmToPt(numberValue("sigX")),
@@ -1815,7 +1982,20 @@ DEMO_HTML = """
       if (kind === "stamp") {
         return state.mode !== "sign" && $("stampToggle").checked;
       }
+      if (kind === "seal") {
+        return state.mode === "seal" && $("sealToggle").checked && $("visibleSeal").checked;
+      }
       return state.mode !== "stamp" && $("signatureToggle").checked && $("visibleSignature").checked;
+    }
+
+    function placementBoxFor(kind) {
+      if (kind === "stamp") {
+        return $("stampBox");
+      }
+      if (kind === "seal") {
+        return $("sealBox");
+      }
+      return $("signatureBox");
     }
 
     function applyBoxStyle(box, values, metrics) {
@@ -1831,8 +2011,8 @@ DEMO_HTML = """
 
     function updatePlacementBoxes() {
       const metrics = placementMetrics();
-      for (const kind of ["stamp", "signature"]) {
-        const box = kind === "stamp" ? $("stampBox") : $("signatureBox");
+      for (const kind of ["stamp", "signature", "seal"]) {
+        const box = placementBoxFor(kind);
         const visible = metrics && isPlacementVisible(kind);
         box.classList.toggle("hidden", !visible);
         if (!visible) {
@@ -1849,6 +2029,12 @@ DEMO_HTML = """
         document.createTextNode($("fieldName").value || "Director Juridic"),
         document.createElement("br"),
         document.createTextNode($("location").value || "București, România")
+      );
+      const sealCaption = $("sealBox").querySelector(".seal-caption");
+      sealCaption.replaceChildren(
+        document.createTextNode($("sealFieldName").value || "SigiliuElectronic1"),
+        document.createElement("br"),
+        document.createTextNode($("sealLocation").value || "București, România")
       );
     }
 
@@ -1868,6 +2054,12 @@ DEMO_HTML = """
         $("stampY").value = roundMm(ptToMm(y));
         $("stampWidth").value = roundMm(ptToMm(width));
         $("stampHeight").value = roundMm(ptToMm(height));
+      } else if (kind === "seal") {
+        $("sealPage").value = numberValue("pageNumber");
+        $("sealX").value = roundMm(ptToMm(x));
+        $("sealY").value = roundMm(ptToMm(y));
+        $("sealWidth").value = roundMm(ptToMm(width));
+        $("sealHeight").value = roundMm(ptToMm(height));
       } else {
         $("sigPage").value = numberValue("pageNumber");
         $("sigX").value = roundMm(ptToMm(x));
@@ -1883,7 +2075,7 @@ DEMO_HTML = """
         return;
       }
       event.preventDefault();
-      const box = kind === "stamp" ? $("stampBox") : $("signatureBox");
+      const box = placementBoxFor(kind);
       const boxRect = box.getBoundingClientRect();
       const canvasRect = $("placementCanvas").getBoundingClientRect();
       state.drag = {
@@ -1905,7 +2097,7 @@ DEMO_HTML = """
         return;
       }
       const drag = state.drag;
-      const box = drag.kind === "stamp" ? $("stampBox") : $("signatureBox");
+      const box = placementBoxFor(drag.kind);
       const dx = event.clientX - drag.startX;
       const dy = event.clientY - drag.startY;
       const minWidth = drag.kind === "stamp" ? 36 : 56;
@@ -1978,6 +2170,30 @@ DEMO_HTML = """
       return metadata;
     }
 
+    function sealMetadata() {
+      const metadata = {
+        field_name: $("sealFieldName").value,
+        reason: $("sealReason").value || null,
+        location: $("sealLocation").value || null,
+        signature_box: null
+      };
+
+      if ($("visibleSeal").checked) {
+        const x = mmToPt(numberValue("sealX"));
+        const y = mmToPt(numberValue("sealY"));
+        const width = mmToPt(numberValue("sealWidth"));
+        const height = mmToPt(numberValue("sealHeight"));
+        metadata.signature_box = {
+          page: pageIndex("sealPage"),
+          x1: roundPt(x),
+          y1: roundPt(y),
+          x2: roundPt(x + width),
+          y2: roundPt(y + height)
+        };
+      }
+      return metadata;
+    }
+
     function selectedFile() {
       const file = $("pdfFile").files[0];
       if (!file) {
@@ -2009,6 +2225,10 @@ DEMO_HTML = """
           endpoint = "/v1/stamp/pdf";
           form.append("metadata", JSON.stringify(stampMetadata()));
           state.outputName = "rezultat-stampilat.pdf";
+        } else if (state.mode === "seal") {
+          endpoint = "/v1/seal/pdf";
+          form.append("metadata", JSON.stringify(sealMetadata()));
+          state.outputName = "rezultat-sigilat.pdf";
         } else {
           form.append("metadata", JSON.stringify(signingMetadata()));
           state.outputName = "rezultat-semnat.pdf";
@@ -2016,7 +2236,10 @@ DEMO_HTML = """
 
         const headers = {};
         const token = $("token").value.trim();
-        if (token) {
+        const sealToken = $("sealToken").value.trim();
+        if (state.mode === "seal" && sealToken) {
+          headers["X-CSC-Seal-OAuth-Token"] = sealToken;
+        } else if (token) {
           headers["X-CSC-OAuth-Token"] = token;
         }
 
@@ -2039,8 +2262,11 @@ DEMO_HTML = """
         state.outputUrl = URL.createObjectURL(blob);
         $("outputFrame").src = state.outputUrl;
         setDownload(state.outputUrl, state.outputName);
-        setStatus("Documentul a fost semnat și ștampilat cu succes.");
-        setResultStatus("Succes", "Documentul a fost semnat și ștampilat cu succes.");
+        const successText = state.mode === "seal"
+          ? "Documentul a fost sigilat electronic cu succes."
+          : "Documentul a fost semnat și ștampilat cu succes.";
+        setStatus(successText);
+        setResultStatus("Succes", successText);
         setPreview("output");
       } catch (error) {
         setStatus(error.message || String(error), true);
@@ -2069,8 +2295,11 @@ DEMO_HTML = """
 
     $("visibleSignature").addEventListener("change", updateSignatureVisibility);
     $("invisibleSignature").addEventListener("change", updateSignatureVisibility);
+    $("visibleSeal").addEventListener("change", updateSealVisibility);
+    $("invisibleSeal").addEventListener("change", updateSealVisibility);
     $("stampToggle").addEventListener("change", syncModeFromToggles);
     $("signatureToggle").addEventListener("change", syncModeFromToggles);
+    $("sealToggle").addEventListener("change", syncModeFromToggles);
     $("stampOpacity").addEventListener("input", updateRangeLabels);
     $("stampBorder").addEventListener("input", updateRangeLabels);
     $("stampTextColor").addEventListener("input", (event) => updateColorLabel(event.target));
@@ -2078,6 +2307,8 @@ DEMO_HTML = """
     $("stampText").addEventListener("input", updatePlacementBoxes);
     $("fieldName").addEventListener("input", updatePlacementBoxes);
     $("location").addEventListener("input", updatePlacementBoxes);
+    $("sealFieldName").addEventListener("input", updatePlacementBoxes);
+    $("sealLocation").addEventListener("input", updatePlacementBoxes);
     for (const id of [
       "stampX",
       "stampY",
@@ -2086,7 +2317,11 @@ DEMO_HTML = """
       "sigX",
       "sigY",
       "sigWidth",
-      "sigHeight"
+      "sigHeight",
+      "sealX",
+      "sealY",
+      "sealWidth",
+      "sealHeight"
     ]) {
       $(id).addEventListener("input", updatePlacementBoxes);
     }
@@ -2103,6 +2338,12 @@ DEMO_HTML = """
         renderPagePreview();
       }
     });
+    $("sealPage").addEventListener("change", () => {
+      if (state.mode === "seal") {
+        $("pageNumber").value = $("sealPage").value;
+        renderPagePreview();
+      }
+    });
     $("stampBox").addEventListener("pointerdown", (event) => {
       startPlacementDrag(
         event,
@@ -2114,6 +2355,13 @@ DEMO_HTML = """
       startPlacementDrag(
         event,
         "signature",
+        event.target.dataset.action === "resize" ? "resize" : "move"
+      );
+    });
+    $("sealBox").addEventListener("pointerdown", (event) => {
+      startPlacementDrag(
+        event,
+        "seal",
         event.target.dataset.action === "resize" ? "resize" : "move"
       );
     });
@@ -2154,6 +2402,9 @@ DEMO_HTML = """
     $("tokenVisibility").addEventListener("click", () => {
       $("token").type = $("token").type === "password" ? "text" : "password";
     });
+    $("sealTokenVisibility").addEventListener("click", () => {
+      $("sealToken").type = $("sealToken").type === "password" ? "text" : "password";
+    });
     $("zoomOut").addEventListener("click", () => {
       state.zoom = Math.max(60, state.zoom - 10);
       $("zoomLevel").textContent = `${state.zoom}%`;
@@ -2172,6 +2423,7 @@ DEMO_HTML = """
 
     updateRangeLabels();
     updateSignatureVisibility();
+    updateSealVisibility();
     setMode("both");
     setPreview("input");
   </script>

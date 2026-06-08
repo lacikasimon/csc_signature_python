@@ -20,7 +20,7 @@ from pyhanko.pdf_utils.text import TextBoxStyle
 from .config import Settings
 from .csc import HashPinnedCSCAuthManager
 from .errors import CSCProviderError, CSCProviderTimeoutError, InvalidPDFError
-from .models import SigningMetadata, StampMetadata
+from .models import ElectronicSealMetadata, SigningMetadata, StampMetadata
 
 
 class PDFSigningService:
@@ -28,20 +28,37 @@ class PDFSigningService:
         self.settings = settings
         self.session = session
 
-    async def check_ready(self, oauth_token: Optional[str] = None) -> None:
-        await self._fetch_credential_info(oauth_token=oauth_token)
+    async def check_ready(
+        self,
+        oauth_token: Optional[str] = None,
+        *,
+        credential_id: Optional[str] = None,
+        for_seal: bool = False,
+    ) -> None:
+        await self._fetch_credential_info(
+            oauth_token=oauth_token,
+            credential_id=credential_id,
+            for_seal=for_seal,
+        )
 
     async def sign_pdf(
         self,
         pdf_bytes: bytes,
         metadata: SigningMetadata,
         oauth_token: Optional[str] = None,
+        *,
+        credential_id: Optional[str] = None,
+        for_seal: bool = False,
     ) -> bytes:
         self._assert_pdf(pdf_bytes)
         if metadata.stamp is not None:
             pdf_bytes = self.stamp_pdf(pdf_bytes, metadata.stamp)
 
-        session_info = self._session_info(oauth_token=oauth_token)
+        session_info = self._session_info(
+            oauth_token=oauth_token,
+            credential_id=credential_id,
+            for_seal=for_seal,
+        )
         credential_info = await self._fetch_credential_info(
             session_info=session_info
         )
@@ -100,6 +117,20 @@ class PDFSigningService:
 
         return output.getvalue()
 
+    async def seal_pdf(
+        self,
+        pdf_bytes: bytes,
+        metadata: ElectronicSealMetadata,
+        oauth_token: Optional[str] = None,
+    ) -> bytes:
+        return await self.sign_pdf(
+            pdf_bytes,
+            metadata,
+            oauth_token=oauth_token,
+            credential_id=self.settings.seal_credential_id,
+            for_seal=True,
+        )
+
     def stamp_pdf(self, pdf_bytes: bytes, metadata: StampMetadata) -> bytes:
         self._assert_pdf(pdf_bytes)
         try:
@@ -132,12 +163,19 @@ class PDFSigningService:
             raise InvalidPDFError("Stamp metadata is not valid for this PDF") from exc
 
     def _session_info(
-        self, oauth_token: Optional[str] = None
+        self,
+        oauth_token: Optional[str] = None,
+        *,
+        credential_id: Optional[str] = None,
+        for_seal: bool = False,
     ) -> CSCServiceSessionInfo:
-        effective_token = self.settings.oauth_token_for_request(oauth_token)
+        effective_token = self.settings.oauth_token_for_request(
+            oauth_token,
+            for_seal=for_seal,
+        )
         return CSCServiceSessionInfo(
             service_url=self.settings.csc_service_url,
-            credential_id=self.settings.csc_credential_id,
+            credential_id=credential_id or self.settings.csc_credential_id,
             oauth_token=effective_token,
             api_ver=self.settings.csc_api_version,
         )
@@ -146,8 +184,14 @@ class PDFSigningService:
         self,
         session_info: Optional[CSCServiceSessionInfo] = None,
         oauth_token: Optional[str] = None,
+        credential_id: Optional[str] = None,
+        for_seal: bool = False,
     ):
-        session_info = session_info or self._session_info(oauth_token=oauth_token)
+        session_info = session_info or self._session_info(
+            oauth_token=oauth_token,
+            credential_id=credential_id,
+            for_seal=for_seal,
+        )
         try:
             return await fetch_certs_in_csc_credential(
                 session=self.session,

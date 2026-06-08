@@ -1,7 +1,12 @@
 import pytest
 from pydantic import ValidationError
 
-from csc_signing_service.models import SignatureBox, SigningMetadata, StampMetadata
+from csc_signing_service.models import (
+    ElectronicSealMetadata,
+    SignatureBox,
+    SigningMetadata,
+    StampMetadata,
+)
 
 
 def test_metadata_defaults_to_invisible_signature():
@@ -24,6 +29,21 @@ def test_signature_box_must_have_positive_area():
 def test_field_name_cannot_contain_dots():
     with pytest.raises(ValidationError):
         SigningMetadata(field_name="Sig.1")
+
+
+def test_electronic_seal_metadata_defaults():
+    metadata = ElectronicSealMetadata()
+
+    assert metadata.field_name == "SigiliuElectronic1"
+    assert metadata.reason == "Sigiliu electronic instituțional"
+    assert metadata.location == "București, România"
+    assert metadata.signature_box is None
+    assert metadata.stamp is None
+
+
+def test_electronic_seal_field_name_uses_signature_rules():
+    with pytest.raises(ValidationError):
+        ElectronicSealMetadata(field_name="Seal.1")
 
 
 def test_stamp_metadata_defaults():

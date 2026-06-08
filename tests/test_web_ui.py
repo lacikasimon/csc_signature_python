@@ -14,6 +14,9 @@ def test_demo_ui_is_served():
     assert "id=\"stampTextColor\"" in response.text
     assert "id=\"stampBorderColor\"" in response.text
     assert "id=\"visibleSignature\"" in response.text
+    assert "id=\"sealToggle\"" in response.text
+    assert "id=\"sealBox\"" in response.text
+    assert "Sigiliu electronic" in response.text
     assert "CSC PDF SIGNER &amp; STAMPER DEMO" in response.text
     assert "Semnarea și ștampilarea documentelor" in response.text
     assert "id=\"clearButton\"" in response.text
@@ -21,6 +24,7 @@ def test_demo_ui_is_served():
     assert "id=\"downloadResultLink\"" in response.text
     assert "class=\"sig-script\"" in response.text
     assert "/v1/sign/pdf" in response.text
+    assert "/v1/seal/pdf" in response.text
     assert "/v1/stamp/pdf" in response.text
     assert "/v1/pdf/page-image" in response.text
 

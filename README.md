@@ -1,4 +1,4 @@
-# CSC PDF Signing Demo
+# CSC PDF Signing, Stamping And Electronic Seal Demo
 
 FastAPI + pyHanko service for PDF signing through a CSC-compatible remote
 signing provider. The Compose setup includes a local demo CSC server backed by
@@ -17,7 +17,8 @@ In another terminal:
 docker compose --profile demo run --rm demo-client
 ```
 
-The demo writes `artifacts/signed-demo.pdf`.
+The demo writes `artifacts/signed-demo.pdf`. The web UI is available at
+`http://127.0.0.1:8100/` when the API is running.
 
 ## API
 
@@ -25,6 +26,9 @@ The demo UI is served at `/`.
 
 - `GET /healthz` returns process health.
 - `GET /readyz` verifies that the configured CSC credential can be fetched.
+- `GET /readyz/seal` verifies that the electronic seal credential can be
+  fetched. If no dedicated seal credential is configured, it falls back to the
+  signing credential for demos.
 - `POST /v1/pdf/page-image` renders one PDF page as `image/png` for visual
   placement previews. Form fields:
   - `pdf`: PDF file.
@@ -34,6 +38,9 @@ The demo UI is served at `/`.
   - `pdf`: PDF file.
   - `metadata`: optional JSON. It can include an optional `stamp` block to
     stamp the PDF before signing.
+- `POST /v1/seal/pdf` applies a CSC-backed electronic seal and returns
+  `application/pdf`. It accepts the same `pdf` form field and an optional
+  `metadata` JSON body with seal-specific defaults.
 
 Default metadata:
 
@@ -80,6 +87,27 @@ Standalone stamp metadata:
 }
 ```
 
+Electronic seal metadata:
+
+```json
+{
+  "field_name": "SigiliuElectronic1",
+  "reason": "Sigiliu electronic instituțional",
+  "location": "București, România",
+  "signature_box": {
+    "page": 0,
+    "x1": 340,
+    "y1": 142,
+    "x2": 510,
+    "y2": 227
+  }
+}
+```
+
+The web UI lets users place the stamp, visible signature, and electronic seal
+visually on a rendered PDF page. UI coordinates are edited in millimeters and
+converted to PDF points before calling the API.
+
 ## Configuration
 
 The signing service is configured with environment variables:
@@ -87,21 +115,28 @@ The signing service is configured with environment variables:
 - `CSC_SERVICE_URL`, default `http://csc-dummy:9000`
 - `CSC_API_VERSION`, default `v1`
 - `CSC_CREDENTIAL_ID`, default `testing-ca/signer1-long`
+- `CSC_SEAL_CREDENTIAL_ID`, optional. Defaults to `CSC_CREDENTIAL_ID` when
+  omitted, which is useful for local demos only.
 - `CSC_OAUTH_TOKEN`, optional fallback token
+- `CSC_SEAL_OAUTH_TOKEN`, optional token for the electronic seal credential.
+  Defaults to `CSC_OAUTH_TOKEN` when omitted.
 - `SIGNING_TIMEOUT_SECONDS`, default `300`
 - `MAX_PDF_MB`, default `25`
 - `PDF_DIGEST_ALGORITHM`, default `sha256`
 
 Requests can override the configured CSC OAuth token with
-`X-CSC-OAuth-Token`. In production, expose this service only behind internal
-auth such as mTLS, a gateway, or trusted service-to-service authentication.
+`X-CSC-OAuth-Token`. Electronic seal calls can use
+`X-CSC-Seal-OAuth-Token`; if omitted, they fall back to `X-CSC-OAuth-Token`
+and then to the configured environment token. In production, expose this
+service only behind internal auth such as mTLS, a gateway, or trusted
+service-to-service authentication.
 
 ## Production Notes
 
 For production, deploy only `signing-api` and point `CSC_SERVICE_URL`,
-`CSC_CREDENTIAL_ID`, and OAuth handling at the real CSC provider. The
-`csc-dummy` image intentionally omits production security controls and binds a
-generated test keypair into a local CSC API.
+`CSC_CREDENTIAL_ID`, `CSC_SEAL_CREDENTIAL_ID`, and OAuth handling at the real
+CSC provider. The `csc-dummy` image intentionally omits production security
+controls and binds a generated test keypair into a local CSC API.
 
 The upstream `certomancer-csc` CLI binds to `localhost`, so this repo uses a
 tiny wrapper that runs the same CSC app on `0.0.0.0` for container networking.

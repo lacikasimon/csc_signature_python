@@ -85,3 +85,9 @@ class SigningMetadata(BaseModel):
         if "." in normalized:
             raise ValueError("field_name cannot contain dots")
         return normalized
+
+
+class ElectronicSealMetadata(SigningMetadata):
+    field_name: str = Field(default="SigiliuElectronic1", min_length=1)
+    reason: Optional[str] = "Sigiliu electronic instituțional"
+    location: Optional[str] = "București, România"

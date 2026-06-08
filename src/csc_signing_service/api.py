@@ -8,7 +8,7 @@ from pydantic import ValidationError
 
 from .config import Settings, get_settings
 from .errors import CSCProviderError, CSCProviderTimeoutError, InvalidPDFError
-from .models import SigningMetadata, StampMetadata
+from .models import ElectronicSealMetadata, SigningMetadata, StampMetadata
 from .pdf_preview import render_pdf_page
 from .signing import PDFSigningService
 from .web import DEMO_HTML
@@ -52,6 +52,26 @@ def create_app() -> FastAPI:
             raise HTTPException(status_code=503, detail=str(exc)) from exc
         return {"status": "ready"}
 
+    @app.get("/readyz/seal")
+    async def readyz_seal(
+        request: Request,
+        x_csc_oauth_token: Optional[str] = Header(default=None),
+        x_csc_seal_oauth_token: Optional[str] = Header(default=None),
+    ):
+        service = _service(request)
+        settings = _settings(request)
+        try:
+            await service.check_ready(
+                oauth_token=x_csc_seal_oauth_token or x_csc_oauth_token,
+                credential_id=settings.seal_credential_id,
+                for_seal=True,
+            )
+        except CSCProviderTimeoutError as exc:
+            raise HTTPException(status_code=503, detail=str(exc)) from exc
+        except CSCProviderError as exc:
+            raise HTTPException(status_code=503, detail=str(exc)) from exc
+        return {"status": "ready", "credential_type": "electronic_seal"}
+
     @app.post("/v1/sign/pdf")
     async def sign_pdf(
         request: Request,
@@ -82,6 +102,40 @@ def create_app() -> FastAPI:
             media_type="application/pdf",
             headers={
                 "Content-Disposition": 'attachment; filename="signed.pdf"'
+            },
+        )
+
+    @app.post("/v1/seal/pdf")
+    async def seal_pdf(
+        request: Request,
+        pdf: UploadFile = File(...),
+        metadata: Optional[str] = Form(default=None),
+        x_csc_oauth_token: Optional[str] = Header(default=None),
+        x_csc_seal_oauth_token: Optional[str] = Header(default=None),
+    ):
+        settings = _settings(request)
+        pdf_bytes = await _read_upload(pdf, max_bytes=settings.max_pdf_bytes)
+        seal_metadata = _parse_seal_metadata(metadata)
+        service = _service(request)
+
+        try:
+            sealed_pdf = await service.seal_pdf(
+                pdf_bytes,
+                seal_metadata,
+                oauth_token=x_csc_seal_oauth_token or x_csc_oauth_token,
+            )
+        except InvalidPDFError as exc:
+            raise HTTPException(status_code=422, detail=str(exc)) from exc
+        except CSCProviderTimeoutError as exc:
+            raise HTTPException(status_code=504, detail=str(exc)) from exc
+        except CSCProviderError as exc:
+            raise HTTPException(status_code=502, detail=str(exc)) from exc
+
+        return Response(
+            content=sealed_pdf,
+            media_type="application/pdf",
+            headers={
+                "Content-Disposition": 'attachment; filename="sealed.pdf"'
             },
         )
 
@@ -160,6 +214,10 @@ def _parse_metadata(raw_metadata: Optional[str]) -> SigningMetadata:
 
 def _parse_signing_metadata(raw_metadata: Optional[str]) -> SigningMetadata:
     return _parse_json_metadata(raw_metadata, SigningMetadata)
+
+
+def _parse_seal_metadata(raw_metadata: Optional[str]) -> ElectronicSealMetadata:
+    return _parse_json_metadata(raw_metadata, ElectronicSealMetadata)
 
 
 def _parse_stamp_metadata(raw_metadata: Optional[str]) -> StampMetadata:
