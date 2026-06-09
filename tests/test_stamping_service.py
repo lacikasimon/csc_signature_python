@@ -98,6 +98,27 @@ async def test_local_demo_signing_replaces_csc_for_demo(sample_pdf_bytes):
     assert signed_fields == ["Signature1"]
 
 
+@pytest.mark.asyncio
+async def test_visible_signature_uses_modern_appearance(sample_pdf_bytes):
+    service = PDFSigningService(
+        Settings(local_signing_enabled=True, _env_file=None),
+        session=None,
+    )
+
+    output = await service.sign_pdf(
+        sample_pdf_bytes,
+        SigningMetadata(
+            reason="Aprobare document",
+            location="Bucharest",
+            signature_box=SignatureBox(page=0, x1=72, y1=72, x2=280, y2=145),
+        ),
+    )
+
+    assert b"SEMNAT ELECTRONIC" in output
+    assert b"Aprobare document" in output
+    assert b"Bucharest" in output
+
+
 def test_add_signature_placeholders_rejects_invalid_pdf():
     service = PDFSigningService(Settings(_env_file=None), session=None)
 

@@ -1,4 +1,5 @@
 import asyncio
+from dataclasses import dataclass
 from datetime import datetime, timedelta, timezone
 from io import BytesIO
 from typing import Optional
@@ -17,7 +18,7 @@ from pyhanko.pdf_utils.incremental_writer import IncrementalPdfFileWriter
 from pyhanko.pdf_utils.misc import PdfReadError, PdfWriteError
 from pyhanko.sign import fields
 from pyhanko.sign.general import SigningError
-from pyhanko.sign.signers import PdfSignatureMetadata, SimpleSigner, async_sign_pdf
+from pyhanko.sign.signers import PdfSignatureMetadata, PdfSigner, SimpleSigner
 from pyhanko.sign.signers.csc_signer import (
     CSCServiceSessionInfo,
     CSCSigner,
@@ -37,6 +38,57 @@ from .models import (
     SigningMetadata,
     StampMetadata,
 )
+
+
+@dataclass(frozen=True)
+class ModernSignatureStampStyle(TextStampStyle):
+    fill_color: tuple[float, float, float] = (0.92, 0.96, 1.0)
+    accent_color: tuple[float, float, float] = (0.02, 0.23, 0.52)
+    border_color: tuple[float, float, float] = (0.0, 0.28, 0.68)
+    border_width: int = 2
+
+    def create_stamp(
+        self,
+        writer,
+        box: layout.BoxConstraints,
+        text_params: dict,
+    ) -> "ModernSignatureStamp":
+        return ModernSignatureStamp(
+            writer=writer,
+            style=self,
+            box=box,
+            text_params=text_params,
+        )
+
+
+class ModernSignatureStamp(TextStamp):
+    def render(self):
+        width = self.box.width
+        height = self.box.height
+        accent_width = min(14, max(10, width * 0.055))
+        fill = self.style.fill_color
+        accent = self.style.accent_color
+        border = self.style.border_color
+        commands = [
+            b"q",
+            b"%g %g %g rg 0 0 %g %g re f" % (*fill, width, height),
+            b"%g %g %g rg 0 0 %g %g re f"
+            % (*accent, accent_width, height),
+            b"1 1 1 RG 1.4 w %g %g m %g %g l %g %g l S"
+            % (
+                accent_width * 0.25,
+                height * 0.55,
+                accent_width * 0.42,
+                height * 0.43,
+                accent_width * 0.75,
+                height * 0.64,
+            ),
+            b"%g %g %g RG %g w 0.5 0.5 %g %g re S"
+            % (*border, self.style.border_width, width - 1, height - 1),
+        ]
+        commands.extend(self._render_inner_content())
+        commands.append(b"Q")
+        return b" ".join(commands)
 
 
 class PDFSigningService:
@@ -117,14 +169,21 @@ class PDFSigningService:
             None if existing_fields_only else self._new_field_spec(metadata)
         )
         output = BytesIO()
+        pdf_signer = PdfSigner(
+            signature_meta,
+            signer,
+            stamp_style=self._signature_stamp_style(for_seal=for_seal),
+            new_field_spec=new_field_spec,
+        )
 
         try:
-            await async_sign_pdf(
+            await pdf_signer.async_sign_pdf(
                 writer,
-                signature_meta=signature_meta,
-                signer=signer,
-                new_field_spec=new_field_spec,
                 existing_fields_only=existing_fields_only,
+                appearance_text_params=self._signature_appearance_params(
+                    metadata,
+                    for_seal=for_seal,
+                ),
                 output=output,
             )
         except CSCProviderTimeoutError:
@@ -312,6 +371,43 @@ class PDFSigningService:
                 valid_days=self.settings.local_signing_valid_days,
             )
         return self._local_signer
+
+    @staticmethod
+    def _signature_stamp_style(*, for_seal: bool) -> ModernSignatureStampStyle:
+        title = "SIGILIU ELECTRONIC" if for_seal else "SEMNAT ELECTRONIC"
+        stamp_text = (
+            f"{title}\n"
+            "%(signer)s\n"
+            "Data: %(ts)s\n"
+            "%(reason)s\n"
+            "%(location)s"
+        )
+        return ModernSignatureStampStyle(
+            stamp_text=stamp_text,
+            timestamp_format="%d.%m.%Y %H:%M",
+            text_box_style=TextBoxStyle(
+                font_size=8,
+                leading=9,
+                text_color=(0.02, 0.12, 0.28),
+            ),
+            inner_content_layout=layout.SimpleBoxLayoutRule(
+                x_align=layout.AxisAlignment.ALIGN_MIN,
+                y_align=layout.AxisAlignment.ALIGN_MID,
+                margins=layout.Margins(left=20, right=8, top=6, bottom=6),
+            ),
+        )
+
+    @staticmethod
+    def _signature_appearance_params(
+        metadata: SigningMetadata,
+        *,
+        for_seal: bool,
+    ) -> dict[str, str]:
+        return {
+            "reason": metadata.reason or "-",
+            "location": metadata.location or "-",
+            "kind": "sigiliu electronic" if for_seal else "semnătură electronică",
+        }
 
     @staticmethod
     def _assert_pdf(pdf_bytes: bytes) -> None:
