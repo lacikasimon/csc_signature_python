@@ -1019,14 +1019,38 @@ DEMO_HTML = """
     }
 
     .placement-box.signature {
-      border-color: var(--blue);
-      color: var(--blue);
-      background: rgba(255, 255, 255, 0.86);
-      align-content: center;
-      justify-items: center;
-      gap: 2px;
-      padding: 6px 8px;
+      grid-template-columns: minmax(28px, 0.34fr) minmax(0, 1fr);
+      align-items: center;
+      justify-items: stretch;
+      gap: 7px;
+      overflow: hidden;
+      border: 1px solid #b8c9dd;
+      border-radius: 4px;
+      color: #063064;
+      background: rgba(255, 255, 255, 0.95);
+      padding: 6px 10px;
       text-transform: none;
+      box-shadow: 0 6px 18px rgba(11, 59, 130, 0.18);
+    }
+
+    .placement-box.signature::before {
+      content: "";
+      position: absolute;
+      inset: 0 auto 0 0;
+      width: 3px;
+      background: #063f82;
+    }
+
+    .placement-box.signature::after {
+      content: "";
+      position: absolute;
+      left: -16%;
+      bottom: -58%;
+      width: 38%;
+      aspect-ratio: 1;
+      border-radius: 999px;
+      background: #e8f0f8;
+      opacity: 0.9;
     }
 
     .placement-box.seal {
@@ -1094,18 +1118,115 @@ DEMO_HTML = """
       text-transform: none;
     }
 
-    .sig-script {
-      font-family: "Segoe Script", "Brush Script MT", cursive;
-      font-size: clamp(14px, 2vw, 22px);
-      line-height: 1;
-      color: #1d63d6;
+    .signature-avatar {
+      position: relative;
+      z-index: 1;
+      width: min(46px, 88%);
+      aspect-ratio: 1;
+      justify-self: center;
+      border-radius: 999px;
+      background: #e5eef7;
+    }
+
+    .signature-avatar::before {
+      content: "";
+      position: absolute;
+      left: 50%;
+      top: 24%;
+      width: 31%;
+      aspect-ratio: 1;
+      transform: translateX(-50%);
+      border: 3px solid #063f82;
+      border-radius: 999px;
+    }
+
+    .signature-avatar::after {
+      content: "";
+      position: absolute;
+      left: 23%;
+      right: 23%;
+      bottom: 20%;
+      height: 30%;
+      border: 3px solid #063f82;
+      border-bottom: 0;
+      border-radius: 999px 999px 0 0;
+    }
+
+    .signature-preview-copy {
+      position: relative;
+      z-index: 1;
+      min-width: 0;
+      display: grid;
+      gap: 1px;
+      text-align: left;
+    }
+
+    .sig-name {
+      overflow: hidden;
+      color: #09294f;
+      font-size: 12px;
+      font-weight: 900;
+      letter-spacing: 0;
+      line-height: 1.05;
+      text-overflow: ellipsis;
+      text-transform: uppercase;
+      white-space: nowrap;
+    }
+
+    .sig-role {
+      overflow: hidden;
+      color: #134b8d;
+      font-size: 9px;
+      font-weight: 900;
+      letter-spacing: 0;
+      line-height: 1.05;
+      text-overflow: ellipsis;
+      text-transform: uppercase;
+      white-space: nowrap;
     }
 
     .sig-caption {
-      font-size: 9px;
+      overflow: hidden;
+      color: #334a68;
+      font-size: 8px;
       font-weight: 800;
-      color: #1f3150;
-      text-align: center;
+      line-height: 1.2;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .signature-watermark {
+      position: absolute;
+      right: 6px;
+      bottom: 7px;
+      width: 34%;
+      height: 46%;
+      color: #0b3b82;
+      opacity: 0.12;
+    }
+
+    .signature-watermark::before {
+      content: "";
+      position: absolute;
+      inset: 0 0 36% 0;
+      background: currentColor;
+      clip-path: polygon(50% 0, 100% 68%, 91% 68%, 50% 22%, 9% 68%, 0 68%);
+    }
+
+    .signature-watermark::after {
+      content: "";
+      position: absolute;
+      left: 8%;
+      right: 8%;
+      bottom: 0;
+      height: 40%;
+      border-top: 4px solid currentColor;
+      border-bottom: 5px solid currentColor;
+      background: repeating-linear-gradient(
+        90deg,
+        currentColor 0 5px,
+        transparent 5px 13px
+      );
     }
 
     .placement-box.hidden {
@@ -1651,17 +1772,39 @@ DEMO_HTML = """
             </label>
           </div>
           <div id="signaturePanel" class="section-body">
-            <div class="field">
-              <label for="fieldName">Nume câmp</label>
-              <input id="fieldName" type="text" value="Director Juridic">
-            </div>
-            <div class="field">
-              <label for="reason">Motiv</label>
-              <input id="reason" type="text" value="Aprobare contract">
-            </div>
-            <div class="field">
-              <label for="location">Locație</label>
-              <input id="location" type="text" value="București, România">
+            <div class="control-grid">
+              <div class="field">
+                <label for="fieldName">Câmp PDF</label>
+                <input id="fieldName" type="text" value="Signature1">
+              </div>
+              <div class="field">
+                <label for="signatureDisplayName">Nume afișat</label>
+                <input id="signatureDisplayName" type="text" value="Kovács Dávid">
+              </div>
+              <div class="field">
+                <label for="signerRole">Funcție</label>
+                <input id="signerRole" type="text" value="Consilier juridic">
+              </div>
+              <div class="field">
+                <label for="contactPhone">Telefon</label>
+                <input id="contactPhone" type="text" value="+40 721 123 456">
+              </div>
+              <div class="field">
+                <label for="contactEmail">E-mail</label>
+                <input id="contactEmail" type="email" value="kovacs.david@institutie.ro">
+              </div>
+              <div class="field">
+                <label for="contactWebsite">Website</label>
+                <input id="contactWebsite" type="url" value="www.institutie.ro">
+              </div>
+              <div class="field">
+                <label for="reason">Motiv</label>
+                <input id="reason" type="text" value="Aprobare contract">
+              </div>
+              <div class="field">
+                <label for="location">Locație</label>
+                <input id="location" type="text" value="București, România">
+              </div>
             </div>
             <div class="field">
               <span class="field-label">Tip semnătură</span>
@@ -1695,21 +1838,21 @@ DEMO_HTML = """
                 <div class="field">
                   <label for="sigY">Poziție Y</label>
                   <div class="input-wrap">
-                    <input id="sigY" type="number" min="0" value="240">
+                    <input id="sigY" type="number" min="0" value="225">
                     <span class="unit">mm</span>
                   </div>
                 </div>
                 <div class="field">
                   <label for="sigWidth">Lățime</label>
                   <div class="input-wrap">
-                    <input id="sigWidth" type="number" min="1" value="80">
+                    <input id="sigWidth" type="number" min="1" value="105">
                     <span class="unit">mm</span>
                   </div>
                 </div>
                 <div class="field">
                   <label for="sigHeight">Înălțime</label>
                   <div class="input-wrap">
-                    <input id="sigHeight" type="number" min="1" value="25">
+                    <input id="sigHeight" type="number" min="1" value="40">
                     <span class="unit">mm</span>
                   </div>
                 </div>
@@ -2007,8 +2150,13 @@ DEMO_HTML = """
                   <span class="resize-handle" data-placement="stamp" data-action="resize"></span>
                 </div>
                 <div id="signatureBox" class="placement-box signature" data-placement="signature">
-                  <span class="sig-script">Semnătură</span>
-                  <span class="sig-caption">Director Juridic<br>București, România</span>
+                  <span class="signature-avatar" aria-hidden="true"></span>
+                  <span class="signature-preview-copy">
+                    <span class="sig-name">KOVÁCS DÁVID</span>
+                    <span class="sig-role">Consilier juridic</span>
+                    <span class="sig-caption">București, România</span>
+                  </span>
+                  <span class="signature-watermark" aria-hidden="true"></span>
                   <span class="resize-handle" data-placement="signature" data-action="resize"></span>
                 </div>
                 <div id="sealBox" class="placement-box seal hidden" data-placement="seal">
@@ -2729,12 +2877,16 @@ DEMO_HTML = """
       $("stampBox").style.color = $("stampTextColor").value;
       $("stampBox").style.borderColor = $("stampBorderColor").value;
       $("stampBox").style.background = `rgba(255, 255, 255, ${0.68 + numberValue("stampOpacity") * 0.26})`;
-      const caption = $("signatureBox").querySelector(".sig-caption");
-      caption.replaceChildren(
-        document.createTextNode($("fieldName").value || "Director Juridic"),
-        document.createElement("br"),
-        document.createTextNode($("location").value || "București, România")
-      );
+      $("signatureBox").querySelector(".sig-name").textContent =
+        $("signatureDisplayName").value || "SEMNAT ELECTRONIC";
+      $("signatureBox").querySelector(".sig-role").textContent =
+        $("signerRole").value || $("fieldName").value || "Semnatar autorizat";
+      const signatureCaptionParts = [
+        $("location").value,
+        $("contactEmail").value
+      ].filter(Boolean);
+      $("signatureBox").querySelector(".sig-caption").textContent =
+        signatureCaptionParts.join(" · ") || "București, România";
       const sealCaption = $("sealBox").querySelector(".seal-caption");
       sealCaption.replaceChildren(
         document.createTextNode($("sealFieldName").value || "SigiliuElectronic1"),
@@ -2914,6 +3066,11 @@ DEMO_HTML = """
         field_name: $("fieldName").value,
         reason: $("reason").value || null,
         location: $("location").value || null,
+        display_name: $("signatureDisplayName").value || null,
+        signer_role: $("signerRole").value || null,
+        contact_phone: $("contactPhone").value || null,
+        contact_email: $("contactEmail").value || null,
+        contact_website: $("contactWebsite").value || null,
         signature_box: null,
         stamp: state.mode === "both" ? stampMetadata() : null
       };
@@ -3110,8 +3267,17 @@ DEMO_HTML = """
     $("stampTextColor").addEventListener("input", (event) => updateColorLabel(event.target));
     $("stampBorderColor").addEventListener("input", (event) => updateColorLabel(event.target));
     $("stampText").addEventListener("input", updatePlacementBoxes);
-    $("fieldName").addEventListener("input", updatePlacementBoxes);
-    $("location").addEventListener("input", updatePlacementBoxes);
+    for (const id of [
+      "fieldName",
+      "signatureDisplayName",
+      "signerRole",
+      "contactPhone",
+      "contactEmail",
+      "contactWebsite",
+      "location"
+    ]) {
+      $(id).addEventListener("input", updatePlacementBoxes);
+    }
     $("sealFieldName").addEventListener("input", updatePlacementBoxes);
     $("sealLocation").addEventListener("input", updatePlacementBoxes);
     $("placeholderFieldName").addEventListener("input", () => syncActivePlaceholderFromFields());

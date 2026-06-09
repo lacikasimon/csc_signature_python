@@ -42,10 +42,13 @@ from .models import (
 
 @dataclass(frozen=True)
 class ModernSignatureStampStyle(TextStampStyle):
-    fill_color: tuple[float, float, float] = (0.92, 0.96, 1.0)
-    accent_color: tuple[float, float, float] = (0.02, 0.23, 0.52)
-    border_color: tuple[float, float, float] = (0.0, 0.28, 0.68)
-    border_width: int = 2
+    fill_color: tuple[float, float, float] = (0.99, 1.0, 1.0)
+    accent_color: tuple[float, float, float] = (0.02, 0.19, 0.42)
+    border_color: tuple[float, float, float] = (0.74, 0.82, 0.91)
+    avatar_fill_color: tuple[float, float, float] = (0.90, 0.94, 0.98)
+    watermark_color: tuple[float, float, float] = (0.91, 0.95, 0.98)
+    divider_color: tuple[float, float, float] = (0.03, 0.22, 0.47)
+    border_width: int = 1
 
     def create_stamp(
         self,
@@ -62,81 +65,278 @@ class ModernSignatureStampStyle(TextStampStyle):
 
 
 class ModernSignatureStamp(TextStamp):
+    _CIRCLE_KAPPA = 0.5522847498
+
     def render(self):
         width = self.box.width
         height = self.box.height
-        accent_width = min(34, max(26, width * 0.14))
         fill = self.style.fill_color
         accent = self.style.accent_color
         border = self.style.border_color
         commands = [
             b"q",
             b"%g %g %g rg 0 0 %g %g re f" % (*fill, width, height),
-            b"%g %g %g rg 0 0 %g %g re f"
-            % (*accent, accent_width, height),
-            b"%g %g %g RG %g w 0.5 0.5 %g %g re S"
-            % (*border, self.style.border_width, width - 1, height - 1),
         ]
-        commands.extend(self._signature_icon_commands(accent_width, height, accent))
+        commands.extend(self._soft_corner_commands(width, height))
+        commands.extend(
+            self._watermark_commands(
+                width,
+                height,
+                self.style.watermark_color,
+            )
+        )
+        commands.append(b"%g %g %g rg 0 0 2.2 %g re f" % (*accent, height))
+        commands.extend(
+            self._avatar_commands(
+                width,
+                height,
+                accent_color=accent,
+                fill_color=self.style.avatar_fill_color,
+            )
+        )
+        commands.extend(
+            self._divider_commands(width, height, self.style.divider_color)
+        )
+        commands.append(
+            b"%g %g %g RG %g w 0.5 0.5 %g %g re S"
+            % (*border, self.style.border_width, width - 1, height - 1)
+        )
         commands.extend(self._render_inner_content())
         commands.append(b"Q")
         return b" ".join(commands)
 
     @staticmethod
-    def _signature_icon_commands(
-        accent_width: float,
-        height: float,
-        accent_color: tuple[float, float, float],
-    ) -> list[bytes]:
+    def _soft_corner_commands(width: float, height: float) -> list[bytes]:
+        radius = min(width * 0.28, height * 1.2)
         return [
-            b"1 1 1 RG 1 J 1 j 1.7 w "
-            b"%g %g m %g %g %g %g %g %g c "
+            ModernSignatureStamp._filled_circle_command(
+                cx=-radius * 0.35,
+                cy=-radius * 0.58,
+                radius=radius,
+                color=(0.92, 0.96, 0.99),
+            )
+        ]
+
+    @staticmethod
+    def _avatar_commands(
+        width: float,
+        height: float,
+        *,
+        accent_color: tuple[float, float, float],
+        fill_color: tuple[float, float, float],
+    ) -> list[bytes]:
+        radius = min(height * 0.30, width * 0.12)
+        if radius < 10:
+            return []
+
+        center_x = max(radius + 12, min(width * 0.22, radius + 34))
+        center_y = height * 0.56
+        head_radius = radius * 0.27
+        body_width = radius * 0.92
+        body_y = center_y - radius * 0.38
+        line_width = max(1.1, min(2.2, height * 0.028))
+
+        return [
+            ModernSignatureStamp._filled_circle_command(
+                cx=center_x,
+                cy=center_y,
+                radius=radius,
+                color=fill_color,
+            ),
+            ModernSignatureStamp._stroked_circle_command(
+                cx=center_x,
+                cy=center_y + radius * 0.18,
+                radius=head_radius,
+                color=accent_color,
+                line_width=line_width,
+            ),
+            b"%g %g %g RG %g w 1 J 1 j %g %g m "
             b"%g %g %g %g %g %g c S"
             % (
-                accent_width * 0.17,
-                height * 0.34,
-                accent_width * 0.31,
-                height * 0.55,
-                accent_width * 0.43,
-                height * 0.18,
-                accent_width * 0.55,
-                height * 0.37,
-                accent_width * 0.65,
-                height * 0.51,
-                accent_width * 0.72,
-                height * 0.30,
-                accent_width * 0.86,
-                height * 0.44,
-            ),
-            b"1 1 1 rg %g %g m %g %g l %g %g l %g %g l h f"
-            % (
-                accent_width * 0.37,
-                height * 0.68,
-                accent_width * 0.66,
-                height * 0.82,
-                accent_width * 0.73,
-                height * 0.72,
-                accent_width * 0.44,
-                height * 0.58,
-            ),
-            b"%g %g %g rg %g %g m %g %g l %g %g l h f"
-            % (
                 *accent_color,
-                accent_width * 0.49,
-                height * 0.66,
-                accent_width * 0.58,
-                height * 0.70,
-                accent_width * 0.53,
-                height * 0.61,
-            ),
-            b"1 1 1 RG 1.2 w %g %g m %g %g l S"
-            % (
-                accent_width * 0.25,
-                height * 0.26,
-                accent_width * 0.82,
-                height * 0.26,
+                line_width,
+                center_x - body_width * 0.52,
+                body_y,
+                center_x - body_width * 0.52,
+                body_y + radius * 0.34,
+                center_x + body_width * 0.52,
+                body_y + radius * 0.34,
+                center_x + body_width * 0.52,
+                body_y,
             ),
         ]
+
+    @staticmethod
+    def _watermark_commands(
+        width: float,
+        height: float,
+        color: tuple[float, float, float],
+    ) -> list[bytes]:
+        if width < 145 or height < 55:
+            return []
+
+        mark_width = min(width * 0.30, height * 1.1)
+        mark_height = min(height * 0.72, mark_width * 0.76)
+        x = width - mark_width - 8
+        y = height * 0.16
+        roof_y = y + mark_height * 0.58
+        top_y = y + mark_height * 0.86
+        base_y = y + mark_height * 0.32
+        line_width = max(1.7, min(4.0, height * 0.034))
+        commands = [
+            b"%g %g %g RG %g w 1 J 1 j %g %g m %g %g l %g %g l S"
+            % (
+                *color,
+                line_width,
+                x,
+                roof_y,
+                x + mark_width * 0.5,
+                top_y,
+                x + mark_width,
+                roof_y,
+            ),
+            b"%g %g %g RG %g w %g %g m %g %g l S"
+            % (
+                *color,
+                line_width,
+                x + mark_width * 0.08,
+                base_y,
+                x + mark_width * 0.92,
+                base_y,
+            ),
+            b"%g %g %g RG %g w %g %g m %g %g l S"
+            % (
+                *color,
+                line_width,
+                x + mark_width * 0.5,
+                top_y,
+                x + mark_width * 0.5,
+                top_y + mark_height * 0.20,
+            ),
+        ]
+        for index in range(4):
+            column_x = x + mark_width * (0.22 + index * 0.17)
+            commands.append(
+                b"%g %g %g RG %g w %g %g m %g %g l S"
+                % (
+                    *color,
+                    line_width,
+                    column_x,
+                    y + mark_height * 0.08,
+                    column_x,
+                    base_y,
+                )
+            )
+        commands.extend(
+            [
+                b"%g %g %g RG %g w %g %g m %g %g l S"
+                % (
+                    *color,
+                    line_width,
+                    x + mark_width * 0.10,
+                    y + mark_height * 0.08,
+                    x + mark_width * 0.90,
+                    y + mark_height * 0.08,
+                ),
+                b"%g %g %g RG %g w %g %g m %g %g l S"
+                % (
+                    *color,
+                    line_width,
+                    x,
+                    y,
+                    x + mark_width,
+                    y,
+                ),
+            ]
+        )
+        return commands
+
+    @staticmethod
+    def _divider_commands(
+        width: float,
+        height: float,
+        color: tuple[float, float, float],
+    ) -> list[bytes]:
+        if width < 150 or height < 58:
+            return []
+        start_x = min(width * 0.34, 108)
+        end_x = width - min(width * 0.10, 34)
+        y = height * 0.12
+        return [
+            b"%g %g %g RG 0.75 w %g %g m %g %g l S"
+            % (*color, start_x, y, end_x, y)
+        ]
+
+    @staticmethod
+    def _filled_circle_command(
+        *,
+        cx: float,
+        cy: float,
+        radius: float,
+        color: tuple[float, float, float],
+    ) -> bytes:
+        return (
+            b"%g %g %g rg " % (*color,)
+            + ModernSignatureStamp._circle_path(cx, cy, radius)
+            + b" f"
+        )
+
+    @staticmethod
+    def _stroked_circle_command(
+        *,
+        cx: float,
+        cy: float,
+        radius: float,
+        color: tuple[float, float, float],
+        line_width: float,
+    ) -> bytes:
+        return (
+            b"%g %g %g RG %g w "
+            % (
+                *color,
+                line_width,
+            )
+            + ModernSignatureStamp._circle_path(cx, cy, radius)
+            + b" S"
+        )
+
+    @staticmethod
+    def _circle_path(cx: float, cy: float, radius: float) -> bytes:
+        control = radius * ModernSignatureStamp._CIRCLE_KAPPA
+        return (
+            b"%g %g m %g %g %g %g %g %g c "
+            b"%g %g %g %g %g %g c "
+            b"%g %g %g %g %g %g c "
+            b"%g %g %g %g %g %g c h"
+            % (
+                cx + radius,
+                cy,
+                cx + radius,
+                cy + control,
+                cx + control,
+                cy + radius,
+                cx,
+                cy + radius,
+                cx - control,
+                cy + radius,
+                cx - radius,
+                cy + control,
+                cx - radius,
+                cy,
+                cx - radius,
+                cy - control,
+                cx - control,
+                cy - radius,
+                cx,
+                cy - radius,
+                cx + control,
+                cy - radius,
+                cx + radius,
+                cy - control,
+                cx + radius,
+                cy,
+            )
+        )
 
 
 class PDFSigningService:
@@ -424,11 +624,10 @@ class PDFSigningService:
     def _signature_stamp_style(*, for_seal: bool) -> ModernSignatureStampStyle:
         title = "SIGILIU ELECTRONIC" if for_seal else "SEMNAT ELECTRONIC"
         stamp_text = (
-            f"{title}\n"
             "%(signer)s\n"
-            "Data: %(ts)s\n"
-            "%(reason)s\n"
-            "%(location)s"
+            "%(role)s\n"
+            f"{title} - %(ts)s\n"
+            "%(details)s"
         )
         return ModernSignatureStampStyle(
             stamp_text=stamp_text,
@@ -441,7 +640,7 @@ class PDFSigningService:
             inner_content_layout=layout.SimpleBoxLayoutRule(
                 x_align=layout.AxisAlignment.ALIGN_MIN,
                 y_align=layout.AxisAlignment.ALIGN_MID,
-                margins=layout.Margins(left=44, right=8, top=6, bottom=6),
+                margins=layout.Margins(left=96, right=28, top=10, bottom=8),
             ),
         )
 
@@ -451,11 +650,35 @@ class PDFSigningService:
         *,
         for_seal: bool,
     ) -> dict[str, str]:
-        return {
+        contact_lines = [
+            value
+            for value in (
+                metadata.contact_phone,
+                metadata.contact_email,
+                metadata.contact_website,
+            )
+            if value
+        ]
+        detail_lines = [*contact_lines]
+        if metadata.reason:
+            detail_lines.append(f"Motiv: {metadata.reason}")
+        if metadata.location:
+            detail_lines.append(f"Locatie: {metadata.location}")
+
+        role = metadata.signer_role
+        if role is None:
+            role = "Instituție publică" if for_seal else metadata.field_name
+
+        params = {
+            "role": role,
+            "details": "\n".join(detail_lines) or "-",
             "reason": metadata.reason or "-",
             "location": metadata.location or "-",
             "kind": "sigiliu electronic" if for_seal else "semnătură electronică",
         }
+        if metadata.display_name:
+            params["signer"] = metadata.display_name
+        return params
 
     @staticmethod
     def _assert_pdf(pdf_bytes: bytes) -> None:

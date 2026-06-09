@@ -27,6 +27,9 @@ def test_demo_ui_is_served():
     assert "id=\"stampTextColor\"" in response.text
     assert "id=\"stampBorderColor\"" in response.text
     assert "id=\"visibleSignature\"" in response.text
+    assert "id=\"signatureDisplayName\"" in response.text
+    assert "id=\"signerRole\"" in response.text
+    assert "id=\"contactEmail\"" in response.text
     assert "id=\"placeholdersToggle\"" in response.text
     assert "id=\"placeholderLayer\"" in response.text
     assert "id=\"signFirstPlaceholder\"" in response.text
@@ -43,7 +46,8 @@ def test_demo_ui_is_served():
     assert "id=\"downloadResultLink\"" in response.text
     assert "function formatApiError" in response.text
     assert "Request ID:" in response.text
-    assert "class=\"sig-script\"" in response.text
+    assert "class=\"signature-avatar\"" in response.text
+    assert "class=\"signature-watermark\"" in response.text
     assert "/v1/sign/pdf" in response.text
     assert "/v1/signature-placeholders/pdf" in response.text
     assert "/v1/seal/pdf" in response.text

@@ -18,6 +18,24 @@ def test_metadata_defaults_to_invisible_signature():
     assert metadata.reason == "Demo CSC signing"
     assert metadata.location is None
     assert metadata.signature_box is None
+    assert metadata.display_name is None
+    assert metadata.signer_role is None
+
+
+def test_signature_appearance_fields_are_trimmed_and_optional():
+    metadata = SigningMetadata(
+        display_name="  Kovacs David  ",
+        signer_role="  Consilier juridic ",
+        contact_phone=" ",
+        contact_email=" kovacs.david@institutie.ro ",
+        contact_website=" www.institutie.ro ",
+    )
+
+    assert metadata.display_name == "Kovacs David"
+    assert metadata.signer_role == "Consilier juridic"
+    assert metadata.contact_phone is None
+    assert metadata.contact_email == "kovacs.david@institutie.ro"
+    assert metadata.contact_website == "www.institutie.ro"
 
 
 def test_signature_box_must_have_positive_area():

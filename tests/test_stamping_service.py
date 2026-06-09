@@ -108,25 +108,56 @@ async def test_visible_signature_uses_modern_appearance(sample_pdf_bytes):
     output = await service.sign_pdf(
         sample_pdf_bytes,
         SigningMetadata(
+            display_name="KOVACS DAVID",
+            signer_role="Consilier juridic",
+            contact_email="kovacs.david@institutie.ro",
             reason="Aprobare document",
             location="Bucharest",
             signature_box=SignatureBox(page=0, x1=72, y1=72, x2=280, y2=145),
         ),
     )
 
+    assert b"KOVACS DAVID" in output
+    assert b"Consilier juridic" in output
     assert b"SEMNAT ELECTRONIC" in output
     assert b"Aprobare document" in output
     assert b"Bucharest" in output
 
 
-def test_modern_signature_icon_uses_configured_accent_color():
-    commands = ModernSignatureStamp._signature_icon_commands(
-        accent_width=30,
-        height=70,
-        accent_color=(0.11, 0.22, 0.33),
+def test_signature_appearance_params_include_card_details():
+    params = PDFSigningService._signature_appearance_params(
+        SigningMetadata(
+            display_name="Kovacs David",
+            signer_role="Consilier juridic",
+            contact_phone="+40 721 123 456",
+            contact_email="kovacs.david@institutie.ro",
+            contact_website="www.institutie.ro",
+            reason="Aprobare document",
+            location="Bucharest",
+        ),
+        for_seal=False,
     )
 
-    assert b"0.11 0.22 0.33 rg" in b" ".join(commands)
+    assert params["signer"] == "Kovacs David"
+    assert params["role"] == "Consilier juridic"
+    assert "+40 721 123 456" in params["details"]
+    assert "kovacs.david@institutie.ro" in params["details"]
+    assert "www.institutie.ro" in params["details"]
+    assert "Motiv: Aprobare document" in params["details"]
+    assert "Locatie: Bucharest" in params["details"]
+
+
+def test_modern_signature_avatar_uses_configured_colors():
+    commands = ModernSignatureStamp._avatar_commands(
+        width=260,
+        height=90,
+        accent_color=(0.11, 0.22, 0.33),
+        fill_color=(0.77, 0.88, 0.99),
+    )
+    command_stream = b" ".join(commands)
+
+    assert b"0.11 0.22 0.33 RG" in command_stream
+    assert b"0.77 0.88 0.99 rg" in command_stream
 
 
 def test_add_signature_placeholders_rejects_invalid_pdf():

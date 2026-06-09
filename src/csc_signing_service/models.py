@@ -75,6 +75,11 @@ class SigningMetadata(BaseModel):
     location: Optional[str] = None
     signature_box: Optional[SignatureBox] = None
     stamp: Optional[StampMetadata] = None
+    display_name: Optional[str] = None
+    signer_role: Optional[str] = None
+    contact_phone: Optional[str] = None
+    contact_email: Optional[str] = None
+    contact_website: Optional[str] = None
 
     @field_validator("field_name")
     @classmethod
@@ -85,6 +90,20 @@ class SigningMetadata(BaseModel):
         if "." in normalized:
             raise ValueError("field_name cannot contain dots")
         return normalized
+
+    @field_validator(
+        "display_name",
+        "signer_role",
+        "contact_phone",
+        "contact_email",
+        "contact_website",
+    )
+    @classmethod
+    def normalize_optional_text(cls, value: Optional[str]) -> Optional[str]:
+        if value is None:
+            return None
+        normalized = value.strip()
+        return normalized or None
 
 
 class ElectronicSealMetadata(SigningMetadata):

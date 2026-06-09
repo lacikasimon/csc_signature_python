@@ -31,10 +31,16 @@ def test_parse_invalid_metadata_raises_422():
 def test_parse_signing_metadata_with_stamp():
     metadata = _parse_metadata(
         '{"field_name": "Sig1", "stamp": {"text": "Reviewed", '
-        '"x": 10, "y": 20, "width": 100, "height": 40}}'
+        '"x": 10, "y": 20, "width": 100, "height": 40}, '
+        '"display_name": "Kovacs David", '
+        '"signer_role": "Consilier juridic", '
+        '"contact_email": "kovacs.david@institutie.ro"}'
     )
 
     assert metadata.field_name == "Sig1"
+    assert metadata.display_name == "Kovacs David"
+    assert metadata.signer_role == "Consilier juridic"
+    assert metadata.contact_email == "kovacs.david@institutie.ro"
     assert metadata.stamp is not None
     assert metadata.stamp.text == "Reviewed"
     assert metadata.stamp.x == 10
