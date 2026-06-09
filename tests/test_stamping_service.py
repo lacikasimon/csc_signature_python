@@ -13,7 +13,7 @@ from csc_signing_service.models import (
     SignaturePlaceholdersMetadata,
     StampMetadata,
 )
-from csc_signing_service.signing import PDFSigningService
+from csc_signing_service.signing import ModernSignatureStamp, PDFSigningService
 
 
 def test_stamp_pdf_returns_readable_pdf(sample_pdf_bytes):
@@ -117,6 +117,16 @@ async def test_visible_signature_uses_modern_appearance(sample_pdf_bytes):
     assert b"SEMNAT ELECTRONIC" in output
     assert b"Aprobare document" in output
     assert b"Bucharest" in output
+
+
+def test_modern_signature_icon_uses_configured_accent_color():
+    commands = ModernSignatureStamp._signature_icon_commands(
+        accent_width=30,
+        height=70,
+        accent_color=(0.11, 0.22, 0.33),
+    )
+
+    assert b"0.11 0.22 0.33 rg" in b" ".join(commands)
 
 
 def test_add_signature_placeholders_rejects_invalid_pdf():

@@ -65,7 +65,7 @@ class ModernSignatureStamp(TextStamp):
     def render(self):
         width = self.box.width
         height = self.box.height
-        accent_width = min(14, max(10, width * 0.055))
+        accent_width = min(34, max(26, width * 0.14))
         fill = self.style.fill_color
         accent = self.style.accent_color
         border = self.style.border_color
@@ -74,21 +74,69 @@ class ModernSignatureStamp(TextStamp):
             b"%g %g %g rg 0 0 %g %g re f" % (*fill, width, height),
             b"%g %g %g rg 0 0 %g %g re f"
             % (*accent, accent_width, height),
-            b"1 1 1 RG 1.4 w %g %g m %g %g l %g %g l S"
-            % (
-                accent_width * 0.25,
-                height * 0.55,
-                accent_width * 0.42,
-                height * 0.43,
-                accent_width * 0.75,
-                height * 0.64,
-            ),
             b"%g %g %g RG %g w 0.5 0.5 %g %g re S"
             % (*border, self.style.border_width, width - 1, height - 1),
         ]
+        commands.extend(self._signature_icon_commands(accent_width, height, accent))
         commands.extend(self._render_inner_content())
         commands.append(b"Q")
         return b" ".join(commands)
+
+    @staticmethod
+    def _signature_icon_commands(
+        accent_width: float,
+        height: float,
+        accent_color: tuple[float, float, float],
+    ) -> list[bytes]:
+        return [
+            b"1 1 1 RG 1 J 1 j 1.7 w "
+            b"%g %g m %g %g %g %g %g %g c "
+            b"%g %g %g %g %g %g c S"
+            % (
+                accent_width * 0.17,
+                height * 0.34,
+                accent_width * 0.31,
+                height * 0.55,
+                accent_width * 0.43,
+                height * 0.18,
+                accent_width * 0.55,
+                height * 0.37,
+                accent_width * 0.65,
+                height * 0.51,
+                accent_width * 0.72,
+                height * 0.30,
+                accent_width * 0.86,
+                height * 0.44,
+            ),
+            b"1 1 1 rg %g %g m %g %g l %g %g l %g %g l h f"
+            % (
+                accent_width * 0.37,
+                height * 0.68,
+                accent_width * 0.66,
+                height * 0.82,
+                accent_width * 0.73,
+                height * 0.72,
+                accent_width * 0.44,
+                height * 0.58,
+            ),
+            b"%g %g %g rg %g %g m %g %g l %g %g l h f"
+            % (
+                *accent_color,
+                accent_width * 0.49,
+                height * 0.66,
+                accent_width * 0.58,
+                height * 0.70,
+                accent_width * 0.53,
+                height * 0.61,
+            ),
+            b"1 1 1 RG 1.2 w %g %g m %g %g l S"
+            % (
+                accent_width * 0.25,
+                height * 0.26,
+                accent_width * 0.82,
+                height * 0.26,
+            ),
+        ]
 
 
 class PDFSigningService:
@@ -393,7 +441,7 @@ class PDFSigningService:
             inner_content_layout=layout.SimpleBoxLayoutRule(
                 x_align=layout.AxisAlignment.ALIGN_MIN,
                 y_align=layout.AxisAlignment.ALIGN_MID,
-                margins=layout.Margins(left=20, right=8, top=6, bottom=6),
+                margins=layout.Margins(left=44, right=8, top=6, bottom=6),
             ),
         )
 
