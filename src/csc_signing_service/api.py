@@ -1,12 +1,16 @@
 import base64
 import binascii
+import logging
 import secrets
+import uuid
 from contextlib import asynccontextmanager
-from typing import Optional
+from typing import Any, Optional
 
 import aiohttp
+from fastapi.exception_handlers import http_exception_handler
+from fastapi.exceptions import RequestValidationError
 from fastapi import FastAPI, File, Form, Header, HTTPException, Request, UploadFile
-from fastapi.responses import HTMLResponse, Response
+from fastapi.responses import HTMLResponse, JSONResponse, Response
 from pydantic import ValidationError
 
 from .config import Settings, get_settings
@@ -22,6 +26,7 @@ from .signing import PDFSigningService
 from .web import DEMO_HTML
 
 AUTH_EXEMPT_PATHS = {"/healthz"}
+LOGGER = logging.getLogger("csc_signing_service.api")
 
 
 @asynccontextmanager
@@ -41,17 +46,91 @@ def create_app() -> FastAPI:
     )
 
     @app.middleware("http")
-    async def require_app_password(request: Request, call_next):
+    async def request_diagnostics_and_auth(request: Request, call_next):
+        request_id = request.headers.get("X-Request-ID") or uuid.uuid4().hex
+        request.state.request_id = request_id
         settings = getattr(request.app.state, "settings", None) or get_settings()
-        if not settings.app_password or request.url.path in AUTH_EXEMPT_PATHS:
-            return await call_next(request)
-        if _basic_auth_matches(
-            request.headers.get("Authorization"),
-            username=settings.app_username,
-            password=settings.app_password,
-        ):
-            return await call_next(request)
-        return _auth_challenge()
+        try:
+            if settings.app_password and request.url.path not in AUTH_EXEMPT_PATHS:
+                if not _basic_auth_matches(
+                    request.headers.get("Authorization"),
+                    username=settings.app_username,
+                    password=settings.app_password,
+                ):
+                    response = _auth_challenge()
+                else:
+                    response = await call_next(request)
+            else:
+                response = await call_next(request)
+        except Exception as exc:
+            LOGGER.exception(
+                "unhandled request error request_id=%s method=%s path=%s",
+                request_id,
+                request.method,
+                request.url.path,
+            )
+            message = (
+                f"{type(exc).__name__}: {exc}"
+                if settings.app_error_details_enabled
+                else "Unexpected server error"
+            )
+            return JSONResponse(
+                status_code=500,
+                content={
+                    "detail": _error_detail(
+                        request,
+                        code="internal_error",
+                        message=message,
+                    )
+                },
+                headers={"X-Request-ID": request_id},
+            )
+        response.headers["X-Request-ID"] = request_id
+        return response
+
+    @app.exception_handler(HTTPException)
+    async def structured_http_exception_handler(
+        request: Request,
+        exc: HTTPException,
+    ):
+        if isinstance(exc.detail, dict) and "message" in exc.detail:
+            return await http_exception_handler(request, exc)
+        return JSONResponse(
+            status_code=exc.status_code,
+            content={
+                "detail": _error_detail(
+                    request,
+                    code=_default_error_code(exc.status_code),
+                    message=_stringify_detail(exc.detail),
+                    errors=exc.detail if isinstance(exc.detail, list) else None,
+                )
+            },
+            headers=exc.headers,
+        )
+
+    @app.exception_handler(RequestValidationError)
+    async def structured_validation_exception_handler(
+        request: Request,
+        exc: RequestValidationError,
+    ):
+        LOGGER.info(
+            "request validation failed request_id=%s method=%s path=%s errors=%s",
+            _request_id(request),
+            request.method,
+            request.url.path,
+            exc.errors(),
+        )
+        return JSONResponse(
+            status_code=422,
+            content={
+                "detail": _error_detail(
+                    request,
+                    code="request_validation_error",
+                    message="Request validation failed",
+                    errors=exc.errors(),
+                )
+            },
+        )
 
     @app.get("/", include_in_schema=False)
     async def demo_ui():
@@ -70,9 +149,15 @@ def create_app() -> FastAPI:
         try:
             await service.check_ready(oauth_token=x_csc_oauth_token)
         except CSCProviderTimeoutError as exc:
-            raise HTTPException(status_code=503, detail=str(exc)) from exc
+            raise _http_error(request, 503, "csc_timeout", str(exc), exc) from exc
         except CSCProviderError as exc:
-            raise HTTPException(status_code=503, detail=str(exc)) from exc
+            raise _http_error(
+                request,
+                503,
+                "csc_provider_error",
+                str(exc),
+                exc,
+            ) from exc
         return {"status": "ready"}
 
     @app.get("/readyz/seal")
@@ -90,9 +175,15 @@ def create_app() -> FastAPI:
                 for_seal=True,
             )
         except CSCProviderTimeoutError as exc:
-            raise HTTPException(status_code=503, detail=str(exc)) from exc
+            raise _http_error(request, 503, "csc_timeout", str(exc), exc) from exc
         except CSCProviderError as exc:
-            raise HTTPException(status_code=503, detail=str(exc)) from exc
+            raise _http_error(
+                request,
+                503,
+                "csc_provider_error",
+                str(exc),
+                exc,
+            ) from exc
         return {"status": "ready", "credential_type": "electronic_seal"}
 
     @app.post("/v1/sign/pdf")
@@ -114,11 +205,17 @@ def create_app() -> FastAPI:
                 oauth_token=x_csc_oauth_token,
             )
         except InvalidPDFError as exc:
-            raise HTTPException(status_code=422, detail=str(exc)) from exc
+            raise _http_error(request, 422, "invalid_pdf", str(exc), exc) from exc
         except CSCProviderTimeoutError as exc:
-            raise HTTPException(status_code=504, detail=str(exc)) from exc
+            raise _http_error(request, 504, "csc_timeout", str(exc), exc) from exc
         except CSCProviderError as exc:
-            raise HTTPException(status_code=502, detail=str(exc)) from exc
+            raise _http_error(
+                request,
+                502,
+                "csc_provider_error",
+                str(exc),
+                exc,
+            ) from exc
 
         return Response(
             content=signed_pdf,
@@ -148,11 +245,17 @@ def create_app() -> FastAPI:
                 oauth_token=x_csc_seal_oauth_token or x_csc_oauth_token,
             )
         except InvalidPDFError as exc:
-            raise HTTPException(status_code=422, detail=str(exc)) from exc
+            raise _http_error(request, 422, "invalid_pdf", str(exc), exc) from exc
         except CSCProviderTimeoutError as exc:
-            raise HTTPException(status_code=504, detail=str(exc)) from exc
+            raise _http_error(request, 504, "csc_timeout", str(exc), exc) from exc
         except CSCProviderError as exc:
-            raise HTTPException(status_code=502, detail=str(exc)) from exc
+            raise _http_error(
+                request,
+                502,
+                "csc_provider_error",
+                str(exc),
+                exc,
+            ) from exc
 
         return Response(
             content=sealed_pdf,
@@ -176,7 +279,7 @@ def create_app() -> FastAPI:
         try:
             stamped_pdf = service.stamp_pdf(pdf_bytes, stamp_metadata)
         except InvalidPDFError as exc:
-            raise HTTPException(status_code=422, detail=str(exc)) from exc
+            raise _http_error(request, 422, "invalid_pdf", str(exc), exc) from exc
 
         return Response(
             content=stamped_pdf,
@@ -215,11 +318,17 @@ def create_app() -> FastAPI:
                     oauth_token=x_csc_oauth_token,
                 )
         except InvalidPDFError as exc:
-            raise HTTPException(status_code=422, detail=str(exc)) from exc
+            raise _http_error(request, 422, "invalid_pdf", str(exc), exc) from exc
         except CSCProviderTimeoutError as exc:
-            raise HTTPException(status_code=504, detail=str(exc)) from exc
+            raise _http_error(request, 504, "csc_timeout", str(exc), exc) from exc
         except CSCProviderError as exc:
-            raise HTTPException(status_code=502, detail=str(exc)) from exc
+            raise _http_error(
+                request,
+                502,
+                "csc_provider_error",
+                str(exc),
+                exc,
+            ) from exc
 
         return Response(
             content=placeholders_pdf,
@@ -241,7 +350,7 @@ def create_app() -> FastAPI:
         try:
             preview = render_pdf_page(pdf_bytes, page_index=page)
         except InvalidPDFError as exc:
-            raise HTTPException(status_code=422, detail=str(exc)) from exc
+            raise _http_error(request, 422, "invalid_pdf", str(exc), exc) from exc
 
         return Response(
             content=preview.image_bytes,
@@ -263,6 +372,72 @@ def _settings(request: Request) -> Settings:
 
 def _service(request: Request) -> PDFSigningService:
     return request.app.state.signing_service
+
+
+def _request_id(request: Request) -> str:
+    return getattr(request.state, "request_id", "unknown")
+
+
+def _error_detail(
+    request: Request,
+    *,
+    code: str,
+    message: str,
+    errors: Any = None,
+) -> dict[str, Any]:
+    detail: dict[str, Any] = {
+        "code": code,
+        "message": message,
+        "request_id": _request_id(request),
+    }
+    if errors is not None:
+        detail["errors"] = errors
+    return detail
+
+
+def _http_error(
+    request: Request,
+    status_code: int,
+    code: str,
+    message: str,
+    exc: Exception,
+) -> HTTPException:
+    LOGGER.warning(
+        "request failed request_id=%s method=%s path=%s status=%s code=%s message=%s",
+        _request_id(request),
+        request.method,
+        request.url.path,
+        status_code,
+        code,
+        message,
+        exc_info=True,
+    )
+    return HTTPException(
+        status_code=status_code,
+        detail=_error_detail(request, code=code, message=message),
+    )
+
+
+def _default_error_code(status_code: int) -> str:
+    if status_code == 400:
+        return "bad_request"
+    if status_code == 401:
+        return "authentication_required"
+    if status_code == 422:
+        return "validation_error"
+    if status_code >= 500:
+        return "server_error"
+    return "http_error"
+
+
+def _stringify_detail(detail: Any) -> str:
+    if isinstance(detail, str):
+        return detail
+    if isinstance(detail, list):
+        return "Request validation failed"
+    if detail is None:
+        return "Request failed"
+    return str(detail)
 
 
 def _basic_auth_matches(

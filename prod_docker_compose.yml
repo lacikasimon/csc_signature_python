@@ -7,6 +7,7 @@ services:
     environment:
       APP_USERNAME: ${APP_USERNAME:-admin}
       APP_PASSWORD: ${APP_PASSWORD:?Set APP_PASSWORD in Coolify environment variables}
+      APP_ERROR_DETAILS_ENABLED: ${APP_ERROR_DETAILS_ENABLED:-true}
       LOCAL_SIGNING_ENABLED: ${LOCAL_SIGNING_ENABLED:-false}
       LOCAL_SIGNING_COMMON_NAME: ${LOCAL_SIGNING_COMMON_NAME:-CSC Demo Local Signer}
       CSC_SERVICE_URL: ${CSC_SERVICE_URL:-http://csc-not-configured:9000}

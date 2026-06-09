@@ -2171,6 +2171,45 @@ DEMO_HTML = """
       $("resultStatus").classList.toggle("error", isError);
     }
 
+    function formatApiError(payload, response) {
+      const fallback = `${response.status} ${response.statusText || "Eroare"}`.trim();
+      if (!payload || !payload.detail) {
+        return fallback;
+      }
+      const detail = payload.detail;
+      if (typeof detail === "string") {
+        return detail;
+      }
+      if (Array.isArray(detail)) {
+        return `Validare eșuată | Detalii: ${JSON.stringify(detail)}`;
+      }
+      const parts = [];
+      if (detail.code) {
+        parts.push(`Cod: ${detail.code}`);
+      }
+      if (detail.message) {
+        parts.push(`Mesaj: ${detail.message}`);
+      }
+      if (detail.request_id) {
+        parts.push(`Request ID: ${detail.request_id}`);
+      }
+      if (detail.errors) {
+        parts.push(`Detalii: ${JSON.stringify(detail.errors)}`);
+      }
+      return parts.length ? parts.join(" | ") : fallback;
+    }
+
+    async function errorFromResponse(response, context) {
+      const payload = await response.json().catch(() => null);
+      const message = formatApiError(payload, response);
+      console.error(context, {
+        status: response.status,
+        statusText: response.statusText,
+        payload
+      });
+      return new Error(message);
+    }
+
     function formatSize(bytes) {
       if (bytes < 1024) {
         return `${bytes} B`;
@@ -2499,9 +2538,7 @@ DEMO_HTML = """
           body: form
         });
         if (!response.ok) {
-          const payload = await response.json().catch(() => null);
-          const detail = payload && payload.detail ? JSON.stringify(payload.detail) : response.statusText;
-          throw new Error(detail);
+          throw await errorFromResponse(response, "PDF preview request failed");
         }
         if (seq !== state.renderSeq) {
           return;
@@ -3011,9 +3048,7 @@ DEMO_HTML = """
         });
 
         if (!response.ok) {
-          const payload = await response.json().catch(() => null);
-          const detail = payload && payload.detail ? JSON.stringify(payload.detail) : response.statusText;
-          throw new Error(detail);
+          throw await errorFromResponse(response, "PDF processing request failed");
         }
 
         const blob = await response.blob();

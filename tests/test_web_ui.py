@@ -41,6 +41,8 @@ def test_demo_ui_is_served():
     assert "id=\"clearButton\"" in response.text
     assert "id=\"resultStatus\"" in response.text
     assert "id=\"downloadResultLink\"" in response.text
+    assert "function formatApiError" in response.text
+    assert "Request ID:" in response.text
     assert "class=\"sig-script\"" in response.text
     assert "/v1/sign/pdf" in response.text
     assert "/v1/signature-placeholders/pdf" in response.text

@@ -10,6 +10,7 @@ def test_settings_defaults():
     assert settings.seal_credential_id == "testing-ca/signer1-long"
     assert settings.app_username == "admin"
     assert settings.app_password is None
+    assert settings.app_error_details_enabled is True
     assert settings.local_signing_enabled is False
     assert settings.local_signing_common_name == "CSC Demo Local Signer"
     assert settings.max_pdf_bytes == 25 * 1024 * 1024

@@ -8,6 +8,7 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 class Settings(BaseSettings):
     app_username: str = "admin"
     app_password: Optional[str] = None
+    app_error_details_enabled: bool = True
     local_signing_enabled: bool = False
     local_signing_common_name: str = Field(
         default="CSC Demo Local Signer",

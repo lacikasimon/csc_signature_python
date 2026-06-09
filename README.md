@@ -164,6 +164,9 @@ The signing service is configured with environment variables:
 - `APP_USERNAME`, default `admin`
 - `APP_PASSWORD`, optional. When set, the web UI and API require HTTP Basic
   authentication. `GET /healthz` remains public for container health checks.
+- `APP_ERROR_DETAILS_ENABLED`, default `true`. When enabled, unexpected server
+  errors include the exception type and message in the API response. Full
+  traceback is always written to container logs with a request ID.
 - `LOCAL_SIGNING_ENABLED`, default `false`. When `true`, the signing service
   uses an in-memory self-signed local demo certificate instead of CSC. This is
   only a temporary demo fallback until the real CSC API is available.
@@ -209,6 +212,7 @@ environment variables in Coolify:
   `0.0.0.0`.
 - `APP_HOST_PORT`: optional host port for direct LAN access, defaults to
   `5345`.
+- `APP_ERROR_DETAILS_ENABLED`: optional, defaults to `true`.
 - `LOCAL_SIGNING_ENABLED`: set to `true` only for the temporary local signing
   fallback.
 - `CSC_SERVICE_URL`: production CSC provider URL.
