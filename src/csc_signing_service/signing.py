@@ -1,19 +1,29 @@
 import asyncio
+from datetime import datetime, timedelta, timezone
 from io import BytesIO
 from typing import Optional
 
 import aiohttp
+from cryptography import x509
+from cryptography.hazmat.primitives import hashes, serialization
+from cryptography.hazmat.primitives.asymmetric import rsa
+from cryptography.x509.oid import NameOID
+from pyhanko.keys import (
+    load_certs_from_pemder_data,
+    load_private_key_from_pemder_data,
+)
 from pyhanko.pdf_utils import layout
 from pyhanko.pdf_utils.incremental_writer import IncrementalPdfFileWriter
 from pyhanko.pdf_utils.misc import PdfReadError, PdfWriteError
 from pyhanko.sign import fields
 from pyhanko.sign.general import SigningError
-from pyhanko.sign.signers import PdfSignatureMetadata, async_sign_pdf
+from pyhanko.sign.signers import PdfSignatureMetadata, SimpleSigner, async_sign_pdf
 from pyhanko.sign.signers.csc_signer import (
     CSCServiceSessionInfo,
     CSCSigner,
     fetch_certs_in_csc_credential,
 )
+from pyhanko_certvalidator.registry import SimpleCertificateStore
 from pyhanko.stamp import TextStamp, TextStampStyle
 from pyhanko.pdf_utils.text import TextBoxStyle
 
@@ -33,6 +43,7 @@ class PDFSigningService:
     def __init__(self, settings: Settings, session: aiohttp.ClientSession):
         self.settings = settings
         self.session = session
+        self._local_signer: Optional[SimpleSigner] = None
 
     async def check_ready(
         self,
@@ -41,6 +52,9 @@ class PDFSigningService:
         credential_id: Optional[str] = None,
         for_seal: bool = False,
     ) -> None:
+        if self.settings.local_signing_enabled:
+            self._local_pdf_signer()
+            return
         await self._fetch_credential_info(
             oauth_token=oauth_token,
             credential_id=credential_id,
@@ -61,25 +75,31 @@ class PDFSigningService:
         if metadata.stamp is not None:
             pdf_bytes = self.stamp_pdf(pdf_bytes, metadata.stamp)
 
-        session_info = self._session_info(
-            oauth_token=oauth_token,
-            credential_id=credential_id,
-            for_seal=for_seal,
+        signing_backend = (
+            "local demo" if self.settings.local_signing_enabled else "CSC"
         )
-        credential_info = await self._fetch_credential_info(
-            session_info=session_info
-        )
-        auth_manager = HashPinnedCSCAuthManager(
-            self.session,
-            csc_session_info=session_info,
-            credential_info=credential_info,
-            request_timeout=self.settings.signing_timeout_seconds,
-        )
-        signer = CSCSigner(
-            self.session,
-            auth_manager=auth_manager,
-            sign_timeout=self.settings.signing_timeout_seconds,
-        )
+        if self.settings.local_signing_enabled:
+            signer = self._local_pdf_signer()
+        else:
+            session_info = self._session_info(
+                oauth_token=oauth_token,
+                credential_id=credential_id,
+                for_seal=for_seal,
+            )
+            credential_info = await self._fetch_credential_info(
+                session_info=session_info
+            )
+            auth_manager = HashPinnedCSCAuthManager(
+                self.session,
+                csc_session_info=session_info,
+                credential_info=credential_info,
+                request_timeout=self.settings.signing_timeout_seconds,
+            )
+            signer = CSCSigner(
+                self.session,
+                auth_manager=auth_manager,
+                sign_timeout=self.settings.signing_timeout_seconds,
+            )
 
         try:
             writer = IncrementalPdfFileWriter(BytesIO(pdf_bytes))
@@ -122,7 +142,7 @@ class PDFSigningService:
         except PdfReadError as exc:
             raise InvalidPDFError("Input is not a readable PDF") from exc
         except SigningError as exc:
-            raise CSCProviderError("pyHanko CSC signing failed") from exc
+            raise CSCProviderError(f"pyHanko {signing_backend} signing failed") from exc
 
         return output.getvalue()
 
@@ -285,9 +305,69 @@ class PDFSigningService:
             empty_field_appearance=empty_field_appearance,
         )
 
+    def _local_pdf_signer(self) -> SimpleSigner:
+        if self._local_signer is None:
+            self._local_signer = _generate_local_demo_signer(
+                common_name=self.settings.local_signing_common_name,
+                valid_days=self.settings.local_signing_valid_days,
+            )
+        return self._local_signer
+
     @staticmethod
     def _assert_pdf(pdf_bytes: bytes) -> None:
         if not pdf_bytes:
             raise InvalidPDFError("PDF upload is empty")
         if not pdf_bytes.startswith(b"%PDF-"):
             raise InvalidPDFError("PDF upload does not start with a PDF header")
+
+
+def _generate_local_demo_signer(
+    *,
+    common_name: str,
+    valid_days: int,
+) -> SimpleSigner:
+    key = rsa.generate_private_key(public_exponent=65537, key_size=2048)
+    subject = issuer = x509.Name(
+        [x509.NameAttribute(NameOID.COMMON_NAME, common_name)]
+    )
+    now = datetime.now(timezone.utc)
+    cert = (
+        x509.CertificateBuilder()
+        .subject_name(subject)
+        .issuer_name(issuer)
+        .public_key(key.public_key())
+        .serial_number(x509.random_serial_number())
+        .not_valid_before(now - timedelta(minutes=5))
+        .not_valid_after(now + timedelta(days=valid_days))
+        .add_extension(x509.BasicConstraints(ca=False, path_length=None), critical=True)
+        .add_extension(
+            x509.KeyUsage(
+                digital_signature=True,
+                content_commitment=True,
+                key_encipherment=False,
+                data_encipherment=False,
+                key_agreement=False,
+                key_cert_sign=False,
+                crl_sign=False,
+                encipher_only=False,
+                decipher_only=False,
+            ),
+            critical=True,
+        )
+        .sign(key, hashes.SHA256())
+    )
+    key_pem = key.private_bytes(
+        serialization.Encoding.PEM,
+        serialization.PrivateFormat.PKCS8,
+        serialization.NoEncryption(),
+    )
+    cert_pem = cert.public_bytes(serialization.Encoding.PEM)
+    signing_key = load_private_key_from_pemder_data(key_pem, passphrase=None)
+    signing_cert = list(load_certs_from_pemder_data(cert_pem))[0]
+    cert_store = SimpleCertificateStore()
+    cert_store.register(signing_cert)
+    return SimpleSigner(
+        signing_cert=signing_cert,
+        signing_key=signing_key,
+        cert_registry=cert_store,
+    )

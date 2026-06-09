@@ -164,6 +164,11 @@ The signing service is configured with environment variables:
 - `APP_USERNAME`, default `admin`
 - `APP_PASSWORD`, optional. When set, the web UI and API require HTTP Basic
   authentication. `GET /healthz` remains public for container health checks.
+- `LOCAL_SIGNING_ENABLED`, default `false`. When `true`, the signing service
+  uses an in-memory self-signed local demo certificate instead of CSC. This is
+  only a temporary demo fallback until the real CSC API is available.
+- `LOCAL_SIGNING_COMMON_NAME`, default `CSC Demo Local Signer`.
+- `LOCAL_SIGNING_VALID_DAYS`, default `3650`.
 - `SIGNING_TIMEOUT_SECONDS`, default `300`
 - `MAX_PDF_MB`, default `25`
 - `PDF_DIGEST_ALGORITHM`, default `sha256`
@@ -182,6 +187,19 @@ For production, deploy only `signing-api` and point `CSC_SERVICE_URL`,
 CSC provider. The `csc-dummy` image intentionally omits production security
 controls and binds a generated test keypair into a local CSC API.
 
+Temporary local signing fallback:
+
+```env
+LOCAL_SIGNING_ENABLED=true
+LOCAL_SIGNING_COMMON_NAME=CSC Demo Local Signer
+```
+
+When enabled, `/readyz`, `/readyz/seal`, `/v1/sign/pdf`, `/v1/seal/pdf`, and
+the `sign_first` multi-signature flow use a locally generated self-signed demo
+certificate instead of calling CSC. This keeps the demo usable before the real
+CSC API is connected, but the resulting signature is not a production CSC
+signature.
+
 For Coolify, use `prod_docker_compose.yml`. Configure at least these
 environment variables in Coolify:
 
@@ -191,6 +209,8 @@ environment variables in Coolify:
   `0.0.0.0`.
 - `APP_HOST_PORT`: optional host port for direct LAN access, defaults to
   `5345`.
+- `LOCAL_SIGNING_ENABLED`: set to `true` only for the temporary local signing
+  fallback.
 - `CSC_SERVICE_URL`: production CSC provider URL.
 - `CSC_CREDENTIAL_ID`: production signing credential.
 - `CSC_OAUTH_TOKEN` or request-scoped `X-CSC-OAuth-Token` handling, depending

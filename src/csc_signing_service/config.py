@@ -8,6 +8,12 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 class Settings(BaseSettings):
     app_username: str = "admin"
     app_password: Optional[str] = None
+    local_signing_enabled: bool = False
+    local_signing_common_name: str = Field(
+        default="CSC Demo Local Signer",
+        min_length=1,
+    )
+    local_signing_valid_days: int = Field(default=3650, ge=1)
     csc_service_url: str = "http://csc-dummy:9000"
     csc_api_version: str = "v1"
     csc_credential_id: str = "testing-ca/signer1-long"

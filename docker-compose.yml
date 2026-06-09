@@ -23,6 +23,8 @@ services:
       CSC_API_VERSION: v1
       CSC_CREDENTIAL_ID: testing-ca/signer1-long
       CSC_OAUTH_TOKEN: deadbeef
+      LOCAL_SIGNING_ENABLED: ${LOCAL_SIGNING_ENABLED:-false}
+      LOCAL_SIGNING_COMMON_NAME: ${LOCAL_SIGNING_COMMON_NAME:-CSC Demo Local Signer}
       SIGNING_TIMEOUT_SECONDS: "300"
       MAX_PDF_MB: "25"
       PDF_DIGEST_ALGORITHM: sha256

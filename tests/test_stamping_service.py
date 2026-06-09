@@ -7,6 +7,7 @@ import pytest
 from csc_signing_service.config import Settings
 from csc_signing_service.errors import InvalidPDFError
 from csc_signing_service.models import (
+    SigningMetadata,
     SignatureBox,
     SignaturePlaceholder,
     SignaturePlaceholdersMetadata,
@@ -75,6 +76,26 @@ def test_add_signature_placeholders_creates_empty_signature_fields(sample_pdf_by
     ]
 
     assert field_names == ["Semnatar1", "Semnatar2"]
+
+
+@pytest.mark.asyncio
+async def test_local_demo_signing_replaces_csc_for_demo(sample_pdf_bytes):
+    service = PDFSigningService(
+        Settings(local_signing_enabled=True, _env_file=None),
+        session=None,
+    )
+
+    output = await service.sign_pdf(sample_pdf_bytes, SigningMetadata())
+
+    assert output.startswith(b"%PDF-")
+    assert len(output) > len(sample_pdf_bytes)
+    reader = PdfFileReader(BytesIO(output))
+    signed_fields = [
+        field_name
+        for field_name, value, _ in fields.enumerate_sig_fields(reader)
+        if value is not None
+    ]
+    assert signed_fields == ["Signature1"]
 
 
 def test_add_signature_placeholders_rejects_invalid_pdf():
